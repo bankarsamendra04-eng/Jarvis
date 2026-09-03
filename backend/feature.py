@@ -201,6 +201,30 @@ def whatsApp(Phone, message, flag, name):
         speak("Unable to complete WhatsApp action.")
 
 
+def rememberMemory(query):
+    from backend.db import get_priority_memories
+    # Clean up the memory text
+    content = query.lower().replace(ASSISTANT_NAME, "").replace("remember", "").strip()
+    if content.startswith("that "):
+        content = content[5:]
+    if not content:
+        speak("Sure thing. What would you like me to remember?")
+        return
+    
+    speak(f"Got it. I've noted that {content} in your high-priority memory.")
+
+
+def recallMemories():
+    from backend.db import get_priority_memories
+    memories = get_priority_memories()
+    if memories and len(memories) > 0:
+        recent_memories = [m['transcription'] for m in memories[-3:]]
+        summary = " Also, ".join(recent_memories)
+        speak(f"Sure thing. Here is what I remember: {summary}.")
+    else:
+        speak("Got it. You haven't asked me to remember anything yet.")
+
+
 def chatBot(query):
     user_input = query.lower()
     cookie_path = os.path.join("backend", "cookie.json")
@@ -212,15 +236,19 @@ def chatBot(query):
             conv_id = chatbot.new_conversation()
             chatbot.change_conversation(conv_id)
             response = chatbot.chat(user_input)
-            response_text = str(response)
-            print(f"AI: {response_text}")
-            speak(response_text)
-            return response_text
+            response_text = str(response).strip()
+            # Format punchy spoken-friendly response (strip long markdown lists/bullets)
+            response_text = re.sub(r'[*_#`]', '', response_text)
+            sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', response_text) if s.strip()]
+            spoken_text = " ".join(sentences[:3]) if sentences else response_text
+            print(f"AI: {spoken_text}")
+            speak(spoken_text)
+            return spoken_text
         except Exception as e:
             print(f"HugChat error: {e}")
     
-    # Fallback smart response
-    fallback_response = f"I received your request: '{query}'. You can ask me to open apps/websites, play YouTube videos, or manage contacts."
+    # Natural, punchy spoken response with conversational filler
+    fallback_response = f"Got it. I received your request: {query}. Let me know if you want me to open an app, play music, or remember something."
     print(fallback_response)
     speak(fallback_response)
     return fallback_response

@@ -21,6 +21,9 @@ def speak(text):
         except Exception:
             pass
             
+        from backend.db import store_message_log
+        store_message_log("assistant", text)
+            
         engine.say(text)
         engine.runAndWait()
     except Exception as e:
@@ -28,6 +31,11 @@ def speak(text):
         try:
             eel.DisplayMessage(text)
             eel.receiverText(text)
+        except Exception:
+            pass
+        try:
+            from backend.db import store_message_log
+            store_message_log("assistant", text)
         except Exception:
             pass
 
@@ -91,8 +99,18 @@ def takeAllCommands(message=None):
     
     try:
         if query:
+            from backend.db import store_message_log
             query_lower = query.lower()
-            if "open" in query_lower:
+            is_priority = "remember" in query_lower
+            store_message_log("user", query, is_priority_memory=is_priority)
+
+            if "remember" in query_lower:
+                from backend.feature import rememberMemory
+                rememberMemory(query)
+            elif "what do you remember" in query_lower or "recall" in query_lower or "my memories" in query_lower:
+                from backend.feature import recallMemories
+                recallMemories()
+            elif "open" in query_lower:
                 from backend.feature import openCommand
                 openCommand(query)
             elif "send message" in query_lower or "call" in query_lower or "video call" in query_lower:
