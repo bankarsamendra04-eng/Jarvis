@@ -62,7 +62,11 @@ def takecommand():
             eel.DisplayMessage("Recognizing...")
         except Exception:
             pass
-        query = r.recognize_google(audio, language='en-US')
+        # en-IN recognizes English and Hinglish phrases with Indian dialect naturally
+        try:
+            query = r.recognize_google(audio, language='en-IN')
+        except Exception:
+            query = r.recognize_google(audio, language='hi-IN')
         print(f"User said: {query}\n")
         try:
             eel.DisplayMessage(query)
@@ -101,26 +105,26 @@ def takeAllCommands(message=None):
         if query:
             from backend.db import store_message_log
             query_lower = query.lower()
-            is_priority = "remember" in query_lower
+            is_priority = any(w in query_lower for w in ["remember", "yaad rakh", "yaad karo"])
             store_message_log("user", query, is_priority_memory=is_priority)
 
-            if "remember" in query_lower:
+            if any(w in query_lower for w in ["remember", "yaad rakh", "yaad karo"]):
                 from backend.feature import rememberMemory
                 rememberMemory(query)
-            elif "what do you remember" in query_lower or "recall" in query_lower or "my memories" in query_lower:
+            elif any(w in query_lower for w in ["what do you remember", "recall", "my memories", "kya yaad hai", "memories batao"]):
                 from backend.feature import recallMemories
                 recallMemories()
-            elif any(w in query_lower for w in ["open", "launch", "show picture", "show photo", "show file", "show document", "start app"]):
+            elif any(w in query_lower for w in ["open", "launch", "show picture", "show photo", "show file", "show document", "start app", "kholo", "open karo", "chalu karo", "dikhao"]):
                 from backend.feature import openCommand
                 openCommand(query)
-            elif "send message" in query_lower or "call" in query_lower or "video call" in query_lower:
+            elif "send message" in query_lower or "call" in query_lower or "video call" in query_lower or "message bhejo" in query_lower:
                 from backend.feature import findContact, whatsApp
                 flag = ""
                 Phone, name = findContact(query)
                 if Phone != 0:
-                    if "send message" in query_lower:
+                    if "send message" in query_lower or "message bhejo" in query_lower:
                         flag = 'message'
-                        speak("What message would you like to send?")
+                        speak("Aap kya message bhejna chahte hain?")
                         msg_query = takecommand()
                         if msg_query:
                             whatsApp(Phone, msg_query, flag, name)
@@ -130,17 +134,17 @@ def takeAllCommands(message=None):
                     else:
                         flag = 'video call'
                         whatsApp(Phone, "", flag, name)
-            elif "on youtube" in query_lower or query_lower.startswith("play "):
+            elif "on youtube" in query_lower or query_lower.startswith("play ") or "play karo" in query_lower or "chalao" in query_lower:
                 from backend.feature import PlayYoutube
                 PlayYoutube(query)
             else:
                 from backend.feature import chatBot
                 chatBot(query)
         else:
-            speak("No command was given.")
+            speak("Koi command nahi mila.")
     except Exception as e:
         print(f"An error occurred while executing command: {e}")
-        speak("Sorry, something went wrong.")
+        speak("Sorry, command execute karte waqt kuch gadbad hui.")
     
     try:
         eel.ShowHood()

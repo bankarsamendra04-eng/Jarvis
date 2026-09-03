@@ -355,14 +355,14 @@ def whatsApp(Phone, message, flag, name):
 def rememberMemory(query):
     from backend.db import get_priority_memories
     # Clean up the memory text
-    content = query.lower().replace(ASSISTANT_NAME, "").replace("remember", "").strip()
+    content = query.lower().replace(ASSISTANT_NAME, "").replace("remember", "").replace("yaad", "").replace("rakho", "").replace("karo", "").strip()
     if content.startswith("that "):
         content = content[5:]
     if not content:
-        speak("Sure thing. What would you like me to remember?")
+        speak("Ji Samendra, aap kya yaad rakhwana chahte hain?")
         return
     
-    speak(f"Got it. I've noted that {content} in your high-priority memory.")
+    speak(f"Got it! Maine yeh high-priority memory mein note kar liya hai.")
 
 
 def recallMemories():
@@ -370,10 +370,10 @@ def recallMemories():
     memories = get_priority_memories()
     if memories and len(memories) > 0:
         recent_memories = [m['transcription'] for m in memories[-3:]]
-        summary = " Also, ".join(recent_memories)
-        speak(f"Sure thing. Here is what I remember: {summary}.")
+        summary = " Aur, ".join(recent_memories)
+        speak(f"Ji Samendra, mujhe yeh sab yaad hai: {summary}.")
     else:
-        speak("Got it. You haven't asked me to remember anything yet.")
+        speak("Samendra, abhi tak aapne mujhe kuch yaad rakhne ke liye nahi kaha hai.")
 
 
 def clean_spoken_response(text, max_sentences=2):
@@ -399,41 +399,41 @@ def answer_personal_query(query):
     q = query.lower().strip(" ?.!\"'")
     profile = load_user_profile()
     name = profile.get("name", USER_NAME)
-    education = profile.get("education", "BTech 3rd-year student with a Diploma in Engineering background")
+    education = profile.get("education", "BTech 3rd-Year Student with Diploma in Engineering background")
     skills = profile.get("technical_skills", [])
     interests = profile.get("areas_of_interest", [])
     career = profile.get("career_goals", [])
 
     # 1. Name & Identity
-    if any(p in q for p in ["my name", "who am i", "what is my name", "know my name", "tell me my name", "what's my name", "whats my name", "who i am"]):
-        return f"Your name is {name}."
+    if any(p in q for p in ["my name", "who am i", "what is my name", "know my name", "tell me my name", "what's my name", "whats my name", "who i am", "mera naam", "naam kya hai"]):
+        return f"Aapka naam {name} hai."
 
     # 2. Creator / Owner / Boss
-    if any(p in q for p in ["who made you", "who is your creator", "who is your owner", "who is your boss", "who created you"]):
-        return f"I am Jarvis, created and configured by {name}."
+    if any(p in q for p in ["who made you", "who is your creator", "who is your owner", "who is your boss", "who created you", "kisne banaya", "tumhara creator"]):
+        return f"Main Jarvis hoon, aur mujhe {name} ne create aur configure kiya hai."
 
     # 3. Education / College / Degree / Background
-    if any(p in q for p in ["my education", "what do i study", "what am i studying", "which year", "my college", "my degree", "my background", "my qualification", "my course"]):
-        return f"You are a {education}."
+    if any(p in q for p in ["my education", "what do i study", "what am i studying", "which year", "my college", "my degree", "my background", "my qualification", "my course", "meri education", "kya padhta", "kya padhte"]):
+        return f"Aap ek {education} hain."
 
     # 4. Skills & Tech Stack
-    if any(p in q for p in ["my skill", "my skills", "my tech stack", "technologies i know", "languages i know", "what do i know", "my programming languages", "what tools do i use"]):
-        skills_str = ", ".join(skills[:8]) + ", and more" if len(skills) > 8 else ", ".join(skills)
-        return f"Your technical skills include {skills_str}."
+    if any(p in q for p in ["my skill", "my skills", "my tech stack", "technologies i know", "languages i know", "what do i know", "my programming languages", "what tools do i use", "mere skills", "mujhe kya aata"]):
+        skills_str = ", ".join(skills[:8]) + ", aur kai saare tools" if len(skills) > 8 else ", ".join(skills)
+        return f"Aapke technical skills mein {skills_str} shaamil hain."
 
     # 5. Core Interests & Focus Areas
-    if any(p in q for p in ["my interest", "my interests", "what do i like", "my focus areas", "what am i interested in", "my domain"]):
-        interests_str = ", ".join(interests[:5]) + ", and more" if len(interests) > 5 else ", ".join(interests)
-        return f"Your core interests include {interests_str}."
+    if any(p in q for p in ["my interest", "my interests", "what do i like", "my focus areas", "what am i interested in", "my domain", "mere interest", "kya pasand"]):
+        interests_str = ", ".join(interests[:5]) + ", aur advanced tech" if len(interests) > 5 else ", ".join(interests)
+        return f"Aapke core interests {interests_str} hain."
 
     # 6. Career Goals & Aspirations
-    if any(p in q for p in ["career goal", "career goals", "my career", "my future", "what do i want to become", "my dream job", "my goals", "my aspirations"]):
+    if any(p in q for p in ["career goal", "career goals", "my career", "my future", "what do i want to become", "my dream job", "my goals", "my aspirations", "mera career", "career goals"]):
         career_str = ", ".join(career[:4])
-        return f"Your career interests include {career_str}."
+        return f"Aapke career goals mein {career_str} aur government/PSU technical opportunities shaamil hain."
 
     # 7. Full Personal Summary / Profile
-    if any(p in q for p in ["about me", "know about me", "tell me about myself", "my profile", "who is samendra"]):
-        return f"You are {name}, a {education} specializing in software development, AI/ML, networking, and cloud computing."
+    if any(p in q for p in ["about me", "know about me", "tell me about myself", "my profile", "who is samendra", "mere baare mein"]):
+        return f"Aap {name} hain, ek {education} jo software development, AI/ML, networking, aur cloud technologies mein specialize kar rahe hain."
 
     # 8. Check stored custom memories in jarvis.db
     try:
@@ -442,9 +442,9 @@ def answer_personal_query(query):
         if memories:
             for m in memories:
                 m_text = m.get('transcription', '').lower()
-                q_words = [w for w in re.findall(r'\b\w+\b', q) if len(w) > 3 and w not in ('what', 'when', 'where', 'tell', 'about', 'remember', 'does', 'have', 'your', 'this', 'that', 'name')]
+                q_words = [w for w in re.findall(r'\b\w+\b', q) if len(w) > 3 and w not in ('what', 'when', 'where', 'tell', 'about', 'remember', 'does', 'have', 'your', 'this', 'that', 'name', 'mera', 'meri', 'karo')]
                 if q_words and all(w in m_text for w in q_words):
-                    return f"Based on your memory logs: {m['transcription']}."
+                    return f"Aapke memory logs ke anusaar: {m['transcription']}."
     except Exception:
         pass
 
@@ -456,7 +456,7 @@ def answer_question_web(query):
     import urllib.parse
     import datetime
 
-    # 1. First priority: Check Personal Profile & Memory
+    # 1. Check Personal Profile & Memory First
     personal_ans = answer_personal_query(query)
     if personal_ans:
         return personal_ans
@@ -464,33 +464,33 @@ def answer_question_web(query):
     q = query.lower().strip()
 
     # 2. Date and Time queries
-    if 'time' in q and any(w in q for w in ['what', 'tell', 'current', 'is']):
+    if 'time' in q and any(w in q for w in ['what', 'tell', 'current', 'is', 'kya', 'kitna']):
         t_str = datetime.datetime.now().strftime('%I:%M %p')
-        return f"The current time is {t_str}."
-    if any(w in q for w in ['date', 'day is today', "today's day", 'what day']):
+        return f"Abhi time hai {t_str}."
+    if any(w in q for w in ['date', 'day is today', "today's day", 'what day', 'aaj kya tarikh', 'aaj kaunsa din']):
         d_str = datetime.datetime.now().strftime('%A, %B %d, %Y')
-        return f"Today is {d_str}."
+        return f"Aaj {d_str} hai."
 
-    # 2. Simple Math queries
-    math_match = re.search(r'what is ([\d\.\s\+\-\*\/\^xX]+)', q)
+    # 3. Simple Math queries
+    math_match = re.search(r'(?:what is|calculate|kitna hoga|answer of)\s*([\d\.\s\+\-\*\/\^xX]+)', q)
     if math_match:
         expr = math_match.group(1).replace('x', '*').replace('X', '*').replace('^', '**').strip()
         allowed = set('0123456789+-*/.() ')
         if all(c in allowed for c in expr):
             try:
                 result = eval(expr, {"__builtins__": None}, {})
-                return f"The answer is {result}."
+                return f"Iska answer hai {result}."
             except Exception:
                 pass
 
-    # 3. Check for Gemini API key if present in environment
+    # 4. Google Library / Gemini API Key Query if configured
     gemini_key = os.environ.get("GEMINI_API_KEY")
     if gemini_key:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
             payload = {
                 "contents": [{
-                    "parts": [{"text": f"You are Jarvis voice assistant. Answer the user query in 1 to 2 spoken-friendly sentences with no bullet points or markdown. Question: {query}"}]
+                    "parts": [{"text": f"You are Jarvis, a helpful Hinglish voice assistant. Answer this question in 1 or 2 spoken sentences in natural Hinglish (Hindi + English mix). Question: {query}"}]
                 }]
             }
             resp = requests.post(url, json=payload, timeout=6).json()
@@ -502,18 +502,19 @@ def answer_question_web(query):
         except Exception as e:
             print(f"Gemini API notice: {e}")
 
-    # 4. Check DuckDuckGo Instant Answer API
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    # 5. Search DuckDuckGo / Knowledge Instant Answers
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}
     try:
         ddg_api_url = f"https://api.duckduckgo.com/?q={urllib.parse.quote(query)}&format=json&no_html=1&skip_disambig=1"
         r = requests.get(ddg_api_url, headers=headers, timeout=4).json()
         ans = r.get('Answer') or r.get('AbstractText')
         if ans and len(ans) > 25:
-            return clean_spoken_response(ans, max_sentences=2)
+            clean_ans = clean_spoken_response(ans, max_sentences=2)
+            return f"Google search ke anusaar: {clean_ans}"
     except Exception:
         pass
 
-    # 5. Search DuckDuckGo Web Snippets
+    # 6. Search Web Knowledge Snippets
     try:
         r = requests.post('https://html.duckduckgo.com/html/', data={'q': query}, headers=headers, timeout=4)
         snippets = re.findall(r'result__snippet[^>]*>(.*?)</a>', r.text)
@@ -521,13 +522,13 @@ def answer_question_web(query):
             for s in snippets:
                 clean_s = clean_spoken_response(s, max_sentences=2)
                 if len(clean_s) > 30 and "javascript" not in clean_s.lower():
-                    return clean_s
+                    return f"Search result ke mutabiq: {clean_s}"
     except Exception:
         pass
 
-    # 6. Wikipedia Search & Summary API
+    # 7. Search Wikipedia Library Summary
     try:
-        cleaned_topic = re.sub(r'^(who is|who was|what is|what are|where is|tell me about|explain)\s+', '', query, flags=re.IGNORECASE).strip(' ?.')
+        cleaned_topic = re.sub(r'^(who is|who was|what is|what are|where is|tell me about|explain|kya hai|kaun hai)\s+', '', query, flags=re.IGNORECASE).strip(' ?.')
         search_terms = [query, cleaned_topic] if cleaned_topic != query else [query]
 
         for term in search_terms:
@@ -542,11 +543,12 @@ def answer_question_web(query):
                 if sum_resp.status_code == 200:
                     extract = sum_resp.json().get('extract')
                     if extract and len(extract) > 40:
-                        return clean_spoken_response(extract, max_sentences=2)
+                        clean_wiki = clean_spoken_response(extract, max_sentences=2)
+                        return f"Search information ke mutabiq: {clean_wiki}"
     except Exception:
         pass
 
-    return f"I found some information on {query}, but could not fetch a concise answer right now."
+    return f"Mujhe {query} ke baare mein jankari mili hai, par abhi concise summary nahi nikal paya."
 
 
 def chatBot(query):
@@ -568,7 +570,7 @@ def chatBot(query):
         except Exception as e:
             print(f"HugChat error: {e}")
     
-    # 2. Answer via multi-source knowledge & web engine
+    # 2. Answer via Google Library knowledge & Hinglish Q&A engine
     answer = answer_question_web(query)
     print(f"Jarvis: {answer}")
     speak(answer)
