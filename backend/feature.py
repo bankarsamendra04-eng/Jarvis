@@ -23,12 +23,18 @@ except Exception as e:
 @eel.expose
 def play_assistant_sound():
     try:
-        sound_file = os.path.join("frontend", "assets", "audio", "start_sound.mp3")
-        if os.path.exists(sound_file):
-            pygame.mixer.music.load(sound_file)
-            pygame.mixer.music.play()
+        audio_dir = os.path.join("frontend", "assets", "audio")
+        wav_file = os.path.join(audio_dir, "start_sound.wav")
+        mp3_file = os.path.join(audio_dir, "start_sound.mp3")
+        target_file = wav_file if os.path.exists(wav_file) else mp3_file
+
+        if os.path.exists(target_file):
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+            snd = pygame.mixer.Sound(target_file)
+            snd.play()
         else:
-            print(f"Sound file not found at: {sound_file}")
+            print("Start sound file not found.")
     except Exception as e:
         print(f"Error playing sound: {e}")
 
