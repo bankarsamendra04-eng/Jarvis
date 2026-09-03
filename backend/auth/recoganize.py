@@ -27,7 +27,7 @@ def AuthenticateFace():
     # initializing haar cascade
     faceCascade = cv2.CascadeClassifier(cascadePath)
     font = cv2.FONT_HERSHEY_SIMPLEX
-    names = ['', '', 'User']
+    names = ['', 'User', 'User']
 
     cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not cam.isOpened():

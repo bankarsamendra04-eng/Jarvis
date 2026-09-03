@@ -28,8 +28,12 @@ def Images_And_Labels(path):
         id = int(os.path.split(imagePath)[-1].split(".")[1])
         faces = detector.detectMultiScale(img_arr)
 
-        for (x, y, w, h) in faces:
-            faceSamples.append(img_arr[y:y + h, x:x + w])
+        if len(faces) > 0:
+            for (x, y, w, h) in faces:
+                faceSamples.append(img_arr[y:y + h, x:x + w])
+                ids.append(id)
+        else:
+            faceSamples.append(img_arr)
             ids.append(id)
 
     return faceSamples, ids
