@@ -12,6 +12,12 @@ $(document).ready(function () {
     $("#SiriWave").attr("hidden", true);
   }
 
+  eel.expose(openMicUI);
+  function openMicUI() {
+    $("#Oval").attr("hidden", true);
+    $("#SiriWave").attr("hidden", false);
+  }
+
   eel.expose(senderText);
   function senderText(message) {
     var chatBox = document.getElementById("chat-canvas-body");

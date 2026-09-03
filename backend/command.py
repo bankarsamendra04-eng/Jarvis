@@ -169,7 +169,30 @@ def takeAllCommands(message=None):
     try:
         if query:
             from backend.db import store_message_log
-            query_lower = query.lower()
+            query_lower = query.lower().strip()
+
+            # Handle 'Hey Jarvis' / 'Jarvis' wake phrases
+            wake_words = ["hey jarvis", "hello jarvis", "ok jarvis", "sun jarvis", "jarvis"]
+            for ww in wake_words:
+                if query_lower == ww:
+                    # User only said 'Hey Jarvis' -> Prompt and open mic for instruction
+                    speak("Ji Samendra, boliye?")
+                    sub_query = takecommand()
+                    if not sub_query:
+                        try:
+                            eel.ShowHood()
+                        except Exception:
+                            pass
+                        return
+                    query = sub_query
+                    query_lower = query.lower().strip()
+                    break
+                elif query_lower.startswith(ww + " ") or query_lower.startswith(ww + ","):
+                    # User said 'Hey Jarvis <instruction>' -> Strip wake word and execute
+                    query = query_lower[len(ww):].strip(" ,.-")
+                    query_lower = query.lower().strip()
+                    break
+
             is_priority = any(w in query_lower for w in ["remember", "yaad rakh", "yaad karo"])
             store_message_log("user", query, is_priority_memory=is_priority)
 

@@ -253,45 +253,59 @@ def PlayYoutube(query):
 
 
 def hotword():
-    porcupine = None
-    paud = None
-    audio_stream = None
-    try:
-        import pvporcupine
-        import pyaudio
-        import pyautogui as autogui
+    """
+    Continuous background listener for 'Hey Jarvis' / 'Jarvis' wake words.
+    When spoken, it activates the mic UI, plays a chime, and captures instructions.
+    """
+    import speech_recognition as sr
 
-        # pre trained keywords    
-        porcupine = pvporcupine.create(keywords=["jarvis", "alexa"]) 
-        paud = pyaudio.PyAudio()
-        audio_stream = paud.open(rate=porcupine.sample_rate, channels=1, format=pyaudio.paInt16, input=True, frames_per_buffer=porcupine.frame_length)
-        
-        # loop for streaming
-        while True:
-            keyword = audio_stream.read(porcupine.frame_length, exception_on_overflow=False)
-            keyword = struct.unpack_from("h" * porcupine.frame_length, keyword)
+    r = sr.Recognizer()
+    r.energy_threshold = 300
+    r.dynamic_energy_threshold = True
 
-            # processing keyword comes from mic 
-            keyword_index = porcupine.process(keyword)
+    print("Background 'Hey Jarvis' Wake Word Engine active...")
+    wake_phrases = ["hey jarvis", "hello jarvis", "ok jarvis", "jarvis", "sun jarvis"]
 
-            # checking if keyword detected
-            if keyword_index >= 0:
-                print("Hotword detected!")
-                # pressing shortcut key win+j
-                autogui.keyDown("win")
-                autogui.press("j")
-                time.sleep(1)
-                autogui.keyUp("win")
+    while True:
+        try:
+            with sr.Microphone() as source:
+                r.adjust_for_ambient_noise(source, duration=0.4)
+                audio = r.listen(source, timeout=None, phrase_time_limit=4)
+
+            try:
+                text = r.recognize_google(audio, language='en-IN').lower().strip()
+                print(f"[Wake Listener Heard]: {text}")
                 
-    except Exception as e:
-        print(f"Hotword detection stopped: {e}")
-    finally:
-        if porcupine is not None:
-            porcupine.delete()
-        if audio_stream is not None:
-            audio_stream.close()
-        if paud is not None:
-            paud.terminate()
+                matched = any(text.startswith(wp) or wp in text for wp in wake_phrases)
+                if matched:
+                    print("Wake Word 'Hey Jarvis' Detected! Opening microphone...")
+                    try:
+                        eel.openMicUI()
+                    except Exception:
+                        pass
+                    
+                    play_assistant_sound()
+                    from backend.command import takeAllCommands
+                    
+                    # If user said 'Hey Jarvis <command>' in one sentence, pass the instruction directly
+                    instruction = ""
+                    for wp in wake_phrases:
+                        if text.startswith(wp):
+                            instruction = text[len(wp):].strip(" ,.-")
+                            break
+                    
+                    if instruction:
+                        takeAllCommands(instruction)
+                    else:
+                        takeAllCommands()
+
+            except sr.UnknownValueError:
+                pass
+            except Exception as rec_err:
+                time.sleep(0.1)
+
+        except Exception as mic_err:
+            time.sleep(0.5)
 
 
 def findContact(query):
