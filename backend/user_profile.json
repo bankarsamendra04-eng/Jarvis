@@ -1,0 +1,33 @@
+{
+  "name": "Samendra Bankar",
+  "education": "BTech 3rd-Year Student (Diploma in Engineering background)",
+  "technical_skills": [
+    "Python", "Java", "HTML", "CSS", "JavaScript", "PHP", 
+    "SQL", "MySQL", "SQLite", "FastAPI", "Firebase/Firestore", 
+    "Android Development", "Git", "GitHub", "VS Code"
+  ],
+  "areas_of_interest": [
+    "Software Development",
+    "Web Development",
+    "AI / Machine Learning",
+    "Networking & Cybersecurity",
+    "Cloud Computing & DevOps",
+    "Embedded Systems & IoT",
+    "Robotics & Automation",
+    "Telecom & Wireless Communication"
+  ],
+  "career_goals": [
+    "Software Development",
+    "Networking & Cybersecurity",
+    "Cloud / DevOps Engineering",
+    "AI / ML Engineering",
+    "Embedded / IoT & Robotics Automation",
+    "Telecom / Wireless Communication",
+    "Government / PSU Technical Opportunities"
+  ],
+  "communication_preferences": {
+    "style": "Practical, step-by-step explanations rather than overly theoretical answers",
+    "language": "Simple English or Hinglish when appropriate",
+    "troubleshooting": "Provide clear instructions, exact commands, and precise file/code locations"
+  }
+}
