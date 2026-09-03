@@ -10,7 +10,7 @@ import sqlite3
 import pygame
 
 from backend.command import speak
-from backend.config import ASSISTANT_NAME
+from backend.config import ASSISTANT_NAME, USER_NAME, load_user_profile
 from backend.helper import extract_yt_term, remove_words
 
 # Initialize pygame mixer safely
@@ -395,14 +395,75 @@ def clean_spoken_response(text, max_sentences=2):
     return text
 
 
+def answer_personal_query(query):
+    q = query.lower().strip(" ?.!\"'")
+    profile = load_user_profile()
+    name = profile.get("name", USER_NAME)
+    education = profile.get("education", "BTech 3rd-year student with a Diploma in Engineering background")
+    skills = profile.get("technical_skills", [])
+    interests = profile.get("areas_of_interest", [])
+    career = profile.get("career_goals", [])
+
+    # 1. Name & Identity
+    if any(p in q for p in ["my name", "who am i", "what is my name", "know my name", "tell me my name", "what's my name", "whats my name", "who i am"]):
+        return f"Your name is {name}."
+
+    # 2. Creator / Owner / Boss
+    if any(p in q for p in ["who made you", "who is your creator", "who is your owner", "who is your boss", "who created you"]):
+        return f"I am Jarvis, created and configured by {name}."
+
+    # 3. Education / College / Degree / Background
+    if any(p in q for p in ["my education", "what do i study", "what am i studying", "which year", "my college", "my degree", "my background", "my qualification", "my course"]):
+        return f"You are a {education}."
+
+    # 4. Skills & Tech Stack
+    if any(p in q for p in ["my skill", "my skills", "my tech stack", "technologies i know", "languages i know", "what do i know", "my programming languages", "what tools do i use"]):
+        skills_str = ", ".join(skills[:8]) + ", and more" if len(skills) > 8 else ", ".join(skills)
+        return f"Your technical skills include {skills_str}."
+
+    # 5. Core Interests & Focus Areas
+    if any(p in q for p in ["my interest", "my interests", "what do i like", "my focus areas", "what am i interested in", "my domain"]):
+        interests_str = ", ".join(interests[:5]) + ", and more" if len(interests) > 5 else ", ".join(interests)
+        return f"Your core interests include {interests_str}."
+
+    # 6. Career Goals & Aspirations
+    if any(p in q for p in ["career goal", "career goals", "my career", "my future", "what do i want to become", "my dream job", "my goals", "my aspirations"]):
+        career_str = ", ".join(career[:4])
+        return f"Your career interests include {career_str}."
+
+    # 7. Full Personal Summary / Profile
+    if any(p in q for p in ["about me", "know about me", "tell me about myself", "my profile", "who is samendra"]):
+        return f"You are {name}, a {education} specializing in software development, AI/ML, networking, and cloud computing."
+
+    # 8. Check stored custom memories in jarvis.db
+    try:
+        from backend.db import get_priority_memories
+        memories = get_priority_memories()
+        if memories:
+            for m in memories:
+                m_text = m.get('transcription', '').lower()
+                q_words = [w for w in re.findall(r'\b\w+\b', q) if len(w) > 3 and w not in ('what', 'when', 'where', 'tell', 'about', 'remember', 'does', 'have', 'your', 'this', 'that', 'name')]
+                if q_words and all(w in m_text for w in q_words):
+                    return f"Based on your memory logs: {m['transcription']}."
+    except Exception:
+        pass
+
+    return None
+
+
 def answer_question_web(query):
     import requests
     import urllib.parse
     import datetime
 
+    # 1. First priority: Check Personal Profile & Memory
+    personal_ans = answer_personal_query(query)
+    if personal_ans:
+        return personal_ans
+
     q = query.lower().strip()
 
-    # 1. Date and Time queries
+    # 2. Date and Time queries
     if 'time' in q and any(w in q for w in ['what', 'tell', 'current', 'is']):
         t_str = datetime.datetime.now().strftime('%I:%M %p')
         return f"The current time is {t_str}."
