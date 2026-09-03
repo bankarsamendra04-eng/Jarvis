@@ -4,8 +4,9 @@ import json
 ASSISTANT_NAME = "jarvis"
 USER_NAME = "Samendra Bankar"
 ASSISTANT_VOICE = "en-IN-PrabhatNeural"  # Authentic Indian Male Neural Voice
-VOICE_PITCH = "+0Hz"
-VOICE_RATE = "+0%"
+VOICE_PITCH = "-8Hz"   # Deeper, firmer baritone tone
+VOICE_RATE = "+4%"     # Crisp, confident speaking pace
+VOICE_VOLUME = "+15%"  # Stronger presence
 
 def load_user_profile():
     profile_path = os.path.join(os.path.dirname(__file__), "user_profile.json")
