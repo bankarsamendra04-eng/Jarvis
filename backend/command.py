@@ -15,19 +15,21 @@ except Exception as e:
 
 def play_indian_tts(text):
     """
-    Generates and plays natural Indian accent voice using edge-tts (Neural Indian accent)
+    Generates and plays natural Indian male accent voice using edge-tts (Neural Indian accent)
     or gTTS (Google India), with pyttsx3 as local fallback.
     """
+    from backend.config import ASSISTANT_VOICE
     audio_dir = os.path.join("frontend", "assets", "audio")
     os.makedirs(audio_dir, exist_ok=True)
     temp_audio = os.path.join(audio_dir, f"tts_{int(time.time() * 1000)}.mp3")
 
-    # 1. Primary Engine: Edge Neural Indian Accent Voice (Neerja / Prabhat)
+    # 1. Primary Engine: Edge Neural Indian Male Accent Voice (en-IN-PrabhatNeural)
     try:
         import edge_tts
         async def _generate():
-            # en-IN-NeerjaNeural provides an authentic, natural Indian tone for Hinglish and English
-            com = edge_tts.Communicate(text, "en-IN-NeerjaNeural")
+            # en-IN-PrabhatNeural provides an authentic, natural Indian Male tone for Hinglish and English
+            voice = ASSISTANT_VOICE if ASSISTANT_VOICE else "en-IN-PrabhatNeural"
+            com = edge_tts.Communicate(text, voice)
             await com.save(temp_audio)
 
         asyncio.run(_generate())
@@ -68,13 +70,12 @@ def play_indian_tts(text):
     except Exception as gtts_err:
         print(f"Google TTS notice: {gtts_err}")
 
-    # 3. Offline Fallback: pyttsx3 SAPI5
+    # 3. Offline Fallback: pyttsx3 SAPI5 (Male Voice)
     try:
         engine = pyttsx3.init('sapi5')
         voices = engine.getProperty('voices')
-        if voices and len(voices) > 1:
-            engine.setProperty('voice', voices[1].id)
-        elif voices:
+        if voices:
+            # Set to male voice (David)
             engine.setProperty('voice', voices[0].id)
         engine.setProperty('rate', 165)
         engine.say(text)

@@ -3,6 +3,7 @@ import json
 
 ASSISTANT_NAME = "jarvis"
 USER_NAME = "Samendra Bankar"
+ASSISTANT_VOICE = "en-IN-PrabhatNeural"  # Authentic Indian Male Neural Voice
 
 def load_user_profile():
     profile_path = os.path.join(os.path.dirname(__file__), "user_profile.json")
