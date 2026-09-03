@@ -45,3 +45,8 @@ cookie.json
 backend/auth/samples/*.jpg
 backend/auth/samples/*.png
 !backend/auth/samples/.gitkeep
+
+# Temporary TTS speech cache
+frontend/assets/audio/tts_*.mp3
+frontend/assets/audio/tts_output.mp3
+

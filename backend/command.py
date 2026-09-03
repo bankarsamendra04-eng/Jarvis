@@ -1,43 +1,107 @@
+import asyncio
+import os
 import time
 import pyttsx3
+import pygame
 import speech_recognition as sr
 import eel
 
-def speak(text):
-    text = str(text)
+# Ensure pygame mixer is initialized
+try:
+    if not pygame.mixer.get_init():
+        pygame.mixer.init()
+except Exception as e:
+    print(f"Mixer notice: {e}")
+
+def play_indian_tts(text):
+    """
+    Generates and plays natural Indian accent voice using edge-tts (Neural Indian accent)
+    or gTTS (Google India), with pyttsx3 as local fallback.
+    """
+    audio_dir = os.path.join("frontend", "assets", "audio")
+    os.makedirs(audio_dir, exist_ok=True)
+    temp_audio = os.path.join(audio_dir, f"tts_{int(time.time() * 1000)}.mp3")
+
+    # 1. Primary Engine: Edge Neural Indian Accent Voice (Neerja / Prabhat)
+    try:
+        import edge_tts
+        async def _generate():
+            # en-IN-NeerjaNeural provides an authentic, natural Indian tone for Hinglish and English
+            com = edge_tts.Communicate(text, "en-IN-NeerjaNeural")
+            await com.save(temp_audio)
+
+        asyncio.run(_generate())
+        if os.path.exists(temp_audio) and os.path.getsize(temp_audio) > 100:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+            pygame.mixer.music.load(temp_audio)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                time.sleep(0.04)
+            pygame.mixer.music.unload()
+            try:
+                os.remove(temp_audio)
+            except Exception:
+                pass
+            return True
+    except Exception as edge_err:
+        print(f"Edge TTS notice: {edge_err}")
+
+    # 2. Secondary Engine: Google TTS (Indian domain .co.in)
+    try:
+        from gtts import gTTS
+        tts = gTTS(text=text, lang="en", tld="co.in", slow=False)
+        tts.save(temp_audio)
+        if os.path.exists(temp_audio):
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+            pygame.mixer.music.load(temp_audio)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                time.sleep(0.04)
+            pygame.mixer.music.unload()
+            try:
+                os.remove(temp_audio)
+            except Exception:
+                pass
+            return True
+    except Exception as gtts_err:
+        print(f"Google TTS notice: {gtts_err}")
+
+    # 3. Offline Fallback: pyttsx3 SAPI5
     try:
         engine = pyttsx3.init('sapi5')
         voices = engine.getProperty('voices')
         if voices and len(voices) > 1:
-            # Pick a female or natural voice if available, else fallback
-            engine.setProperty('voice', voices[1].id if len(voices) > 1 else voices[0].id)
+            engine.setProperty('voice', voices[1].id)
         elif voices:
             engine.setProperty('voice', voices[0].id)
-        engine.setProperty('rate', 174)
-        
-        try:
-            eel.DisplayMessage(text)
-            eel.receiverText(text)
-        except Exception:
-            pass
-            
-        from backend.db import store_message_log
-        store_message_log("assistant", text)
-            
+        engine.setProperty('rate', 165)
         engine.say(text)
         engine.runAndWait()
-    except Exception as e:
-        print(f"TTS Speech error: {e}")
-        try:
-            eel.DisplayMessage(text)
-            eel.receiverText(text)
-        except Exception:
-            pass
-        try:
-            from backend.db import store_message_log
-            store_message_log("assistant", text)
-        except Exception:
-            pass
+        return True
+    except Exception as sapi_err:
+        print(f"SAPI5 fallback error: {sapi_err}")
+        return False
+
+def speak(text):
+    text = str(text).strip()
+    if not text:
+        return
+        
+    try:
+        eel.DisplayMessage(text)
+        eel.receiverText(text)
+    except Exception:
+        pass
+
+    try:
+        from backend.db import store_message_log
+        store_message_log("assistant", text)
+    except Exception:
+        pass
+
+    play_indian_tts(text)
 
 
 def takecommand():
