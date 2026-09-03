@@ -110,7 +110,7 @@ def takeAllCommands(message=None):
             elif "what do you remember" in query_lower or "recall" in query_lower or "my memories" in query_lower:
                 from backend.feature import recallMemories
                 recallMemories()
-            elif "open" in query_lower:
+            elif any(w in query_lower for w in ["open", "launch", "show picture", "show photo", "show file", "show document", "start app"]):
                 from backend.feature import openCommand
                 openCommand(query)
             elif "send message" in query_lower or "call" in query_lower or "video call" in query_lower:

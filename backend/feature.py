@@ -33,50 +33,201 @@ def play_assistant_sound():
         print(f"Error playing sound: {e}")
 
 
+def find_system_or_file(raw_target):
+    target = raw_target.lower().strip()
+    target = re.sub(r'^(the|my|a|an|file|app|picture|photo|document|folder|app called)\s+', '', target).strip()
+    user_home = os.path.expanduser('~')
+    
+    # 1. System Protocols, Windows UWP Apps, and Built-ins
+    protocols = {
+        'camera': ('protocol', 'start microsoft.windows.camera:'),
+        'webcam': ('protocol', 'start microsoft.windows.camera:'),
+        'settings': ('protocol', 'start ms-settings:'),
+        'setting': ('protocol', 'start ms-settings:'),
+        'bluetooth': ('protocol', 'start ms-settings:bluetooth'),
+        'wifi': ('protocol', 'start ms-settings:network-wifi'),
+        'wi-fi': ('protocol', 'start ms-settings:network-wifi'),
+        'network': ('protocol', 'start ms-settings:network'),
+        'sound': ('protocol', 'start ms-settings:sound'),
+        'volume': ('protocol', 'start ms-settings:sound'),
+        'display': ('protocol', 'start ms-settings:display'),
+        'brightness': ('protocol', 'start ms-settings:display'),
+        'windows update': ('protocol', 'start ms-settings:windowsupdate'),
+        'update': ('protocol', 'start ms-settings:windowsupdate'),
+        'calculator': ('protocol', 'start calculator:'),
+        'calc': ('protocol', 'start calculator:'),
+        'photos': ('protocol', 'start ms-photos:'),
+        'paint': ('exe', 'mspaint.exe'),
+        'notepad': ('exe', 'notepad.exe'),
+        'cmd': ('exe', 'cmd.exe'),
+        'command prompt': ('exe', 'cmd.exe'),
+        'powershell': ('exe', 'powershell.exe'),
+        'terminal': ('exe', 'wt.exe'),
+        'task manager': ('exe', 'taskmgr.exe'),
+        'taskmanager': ('exe', 'taskmgr.exe'),
+        'control panel': ('exe', 'control.exe'),
+        'file explorer': ('exe', 'explorer.exe'),
+        'explorer': ('exe', 'explorer.exe'),
+        'this pc': ('exe', 'explorer.exe ='),
+        'my computer': ('exe', 'explorer.exe ='),
+        'recycle bin': ('protocol', 'start shell:RecycleBinFolder'),
+        'vs code': ('cmd', 'code'),
+        'vscode': ('cmd', 'code'),
+        'code': ('cmd', 'code'),
+        'edge': ('exe', 'msedge.exe'),
+        'microsoft edge': ('exe', 'msedge.exe'),
+        'chrome': ('exe', 'chrome.exe'),
+        'google chrome': ('exe', 'chrome.exe'),
+        'brave': ('exe', 'brave.exe'),
+        'firefox': ('exe', 'firefox.exe'),
+        'android studio': ('cmd', 'studio64.exe')
+    }
+
+    if target in protocols:
+        return protocols[target]
+
+    # 2. Standard User Special Folders
+    special_dirs = {
+        'desktop': [os.path.join(user_home, 'OneDrive', 'Desktop'), os.path.join(user_home, 'Desktop')],
+        'downloads': [os.path.join(user_home, 'Downloads')],
+        'download': [os.path.join(user_home, 'Downloads')],
+        'documents': [os.path.join(user_home, 'OneDrive', 'Documents'), os.path.join(user_home, 'Documents')],
+        'document': [os.path.join(user_home, 'OneDrive', 'Documents'), os.path.join(user_home, 'Documents')],
+        'pictures': [os.path.join(user_home, 'OneDrive', 'Pictures'), os.path.join(user_home, 'Pictures')],
+        'picture': [os.path.join(user_home, 'OneDrive', 'Pictures'), os.path.join(user_home, 'Pictures')],
+        'photos': [os.path.join(user_home, 'OneDrive', 'Pictures'), os.path.join(user_home, 'Pictures')],
+        'photo': [os.path.join(user_home, 'OneDrive', 'Pictures'), os.path.join(user_home, 'Pictures')],
+        'music': [os.path.join(user_home, 'OneDrive', 'Music'), os.path.join(user_home, 'Music')],
+        'videos': [os.path.join(user_home, 'OneDrive', 'Videos'), os.path.join(user_home, 'Videos')]
+    }
+    if target in special_dirs:
+        for p in special_dirs[target]:
+            if os.path.exists(p):
+                return ('folder', p)
+
+    # 3. Search Start Menu Shortcuts (Installed Apps & Tools)
+    start_menu_dirs = [
+        os.path.join(os.environ.get('APPDATA', ''), r'Microsoft\Windows\Start Menu\Programs'),
+        os.path.join(os.environ.get('PROGRAMDATA', ''), r'Microsoft\Windows\Start Menu\Programs'),
+        os.path.join(os.environ.get('LOCALAPPDATA', ''), r'Microsoft\WindowsApps')
+    ]
+    for sm_dir in start_menu_dirs:
+        if os.path.exists(sm_dir):
+            for root, dirs, files in os.walk(sm_dir):
+                for f in files:
+                    base = os.path.splitext(f)[0].lower()
+                    if target == base or target in base:
+                        return ('file', os.path.join(root, f))
+
+    # 4. Search User Files, Pictures, PDFs, Code, Media, Projects
+    search_dirs = [
+        os.path.join(user_home, 'OneDrive', 'Desktop'),
+        os.path.join(user_home, 'Desktop'),
+        os.path.join(user_home, 'Downloads'),
+        os.path.join(user_home, 'OneDrive', 'Pictures'),
+        os.path.join(user_home, 'Pictures'),
+        os.path.join(user_home, 'OneDrive', 'Documents'),
+        os.path.join(user_home, 'Documents'),
+        os.path.join(user_home, 'Videos'),
+        os.path.join(user_home, 'Music'),
+        os.getcwd()
+    ]
+    
+    for s_dir in search_dirs:
+        if os.path.exists(s_dir):
+            for root, dirs, files in os.walk(s_dir):
+                dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ('node_modules', '__pycache__', 'venv', 'env', '.git')]
+                rel_depth = root[len(s_dir):].count(os.sep)
+                if rel_depth > 3:
+                    continue
+                for f in files:
+                    fname_lower = f.lower()
+                    fbase_lower = os.path.splitext(f)[0].lower()
+                    if target == fbase_lower or target == fname_lower or target in fbase_lower:
+                        return ('file', os.path.join(root, f))
+                for d in dirs:
+                    if target == d.lower() or target in d.lower():
+                        return ('folder', os.path.join(root, d))
+
+    return None
+
+
 def openCommand(query):
-    query = query.replace(ASSISTANT_NAME, "")
-    query = query.replace("open", "")
-    query = query.strip().lower()
+    # Clean query
+    raw_query = query
+    words_to_strip = [ASSISTANT_NAME, "open", "launch", "start", "show", "view", "find", "search for", "look for"]
+    cleaned_target = query.lower()
+    for w in words_to_strip:
+        cleaned_target = cleaned_target.replace(w, "")
+    cleaned_target = cleaned_target.strip(' ?.!')
 
-    if query != "":
+    if not cleaned_target:
+        speak("What would you like me to open?")
+        return
+
+    # 1. Search Laptop for file, picture, app, folder, protocol
+    match = find_system_or_file(cleaned_target)
+    if match:
+        kind, path = match
+        display_name = os.path.basename(path) if kind in ('file', 'folder') else cleaned_target
+        display_name = os.path.splitext(display_name)[0]
+        speak(f"Opening {display_name}")
         try:
-            conn = sqlite3.connect("jarvis.db")
-            cursor = conn.cursor()
-
-            # Check system commands first
-            cursor.execute('SELECT path FROM sys_command WHERE LOWER(name) = ?', (query,))
-            sys_results = cursor.fetchall()
-
-            if len(sys_results) != 0:
-                speak(f"Opening {query}")
+            if kind == 'protocol':
+                os.system(path)
+            elif kind in ('file', 'folder'):
+                os.startfile(path)
+            elif kind == 'exe':
+                subprocess.Popen(path, shell=True)
+            elif kind == 'cmd':
                 try:
-                    os.startfile(sys_results[0][0])
+                    os.system(f'start {path}')
                 except Exception:
-                    subprocess.Popen(sys_results[0][0], shell=True)
-                conn.close()
-                return
-
-            # Check web commands
-            cursor.execute('SELECT url FROM web_command WHERE LOWER(name) = ?', (query,))
-            web_results = cursor.fetchall()
-            conn.close()
-
-            if len(web_results) != 0:
-                speak(f"Opening {query}")
-                webbrowser.open(web_results[0][0])
-            else:
-                speak(f"Opening {query}")
-                try:
-                    # Attempt to open as a URL or system application
-                    if "." in query and not " " in query:
-                        webbrowser.open(f"https://{query}")
-                    else:
-                        os.system(f'start {query}')
-                except Exception:
-                    speak("Application or website not found")
+                    subprocess.Popen(path, shell=True)
+            return
         except Exception as e:
-            print(f"Error in openCommand: {e}")
-            speak("Something went wrong while opening the application")
+            print(f"Error launching target: {e}")
+
+    # 2. Check Database System Commands
+    try:
+        conn = sqlite3.connect("jarvis.db")
+        cursor = conn.cursor()
+        cursor.execute('SELECT path FROM sys_command WHERE LOWER(name) = ?', (cleaned_target,))
+        sys_results = cursor.fetchall()
+        if sys_results:
+            speak(f"Opening {cleaned_target}")
+            try:
+                os.startfile(sys_results[0][0])
+            except Exception:
+                subprocess.Popen(sys_results[0][0], shell=True)
+            conn.close()
+            return
+
+        # 3. Check Database Web Commands
+        cursor.execute('SELECT url FROM web_command WHERE LOWER(name) = ?', (cleaned_target,))
+        web_results = cursor.fetchall()
+        conn.close()
+        if web_results:
+            speak(f"Opening {cleaned_target}")
+            webbrowser.open(web_results[0][0])
+            return
+    except Exception as db_err:
+        print(f"Database lookup error: {db_err}")
+
+    # 4. Check if it is a Web URL
+    if "." in cleaned_target and " " not in cleaned_target:
+        speak(f"Opening {cleaned_target}")
+        webbrowser.open(f"https://{cleaned_target}")
+        return
+
+    # 5. Generic Windows execution or search
+    try:
+        speak(f"Looking for {cleaned_target}")
+        ret = os.system(f'start "" "{cleaned_target}"')
+        if ret != 0:
+            webbrowser.open(f"https://www.google.com/search?q={cleaned_target}")
+    except Exception:
+        speak(f"Sorry, I could not find {cleaned_target} on this computer.")
 
 
 def PlayYoutube(query):
