@@ -1,0 +1,47 @@
+# Virtual Environment
+envJarvis/
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache & build files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Database & Contacts
+jarvis.db
+contacts.csv
+
+# HuggingFace & API Keys / Credentials
+backend/cookie.json
+cookie.json
+*.env
+.env
+
+# VS Code & IDE configs
+.vscode/
+.idea/
+
+# Face Authentication Training Samples (Preserve model / keep training local)
+backend/auth/samples/*.jpg
+backend/auth/samples/*.png
+!backend/auth/samples/.gitkeep
