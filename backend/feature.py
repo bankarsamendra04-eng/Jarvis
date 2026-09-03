@@ -225,10 +225,123 @@ def recallMemories():
         speak("Got it. You haven't asked me to remember anything yet.")
 
 
+def clean_spoken_response(text, max_sentences=2):
+    import html
+    text = html.unescape(text)
+    text = re.sub(r'<[^>]+>', '', text)
+    text = re.sub(r'\[[^\]]*\]', '', text)
+    text = re.sub(r'\([^)]*\)', '', text)
+    text = re.sub(r'https?://\S+', '', text)
+    text = re.sub(r'[*_#`~]', '', text)
+    text = re.sub(r'^\w+\s+\d+,\s+\d+\s*\.\.\.\s*', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if len(s.strip()) > 3]
+    if sentences:
+        result = ' '.join(sentences[:max_sentences])
+        if not result.endswith(('.', '!', '?')):
+            result += '.'
+        return result
+    return text
+
+
+def answer_question_web(query):
+    import requests
+    import urllib.parse
+    import datetime
+
+    q = query.lower().strip()
+
+    # 1. Date and Time queries
+    if 'time' in q and any(w in q for w in ['what', 'tell', 'current', 'is']):
+        t_str = datetime.datetime.now().strftime('%I:%M %p')
+        return f"The current time is {t_str}."
+    if any(w in q for w in ['date', 'day is today', "today's day", 'what day']):
+        d_str = datetime.datetime.now().strftime('%A, %B %d, %Y')
+        return f"Today is {d_str}."
+
+    # 2. Simple Math queries
+    math_match = re.search(r'what is ([\d\.\s\+\-\*\/\^xX]+)', q)
+    if math_match:
+        expr = math_match.group(1).replace('x', '*').replace('X', '*').replace('^', '**').strip()
+        allowed = set('0123456789+-*/.() ')
+        if all(c in allowed for c in expr):
+            try:
+                result = eval(expr, {"__builtins__": None}, {})
+                return f"The answer is {result}."
+            except Exception:
+                pass
+
+    # 3. Check for Gemini API key if present in environment
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            payload = {
+                "contents": [{
+                    "parts": [{"text": f"You are Jarvis voice assistant. Answer the user query in 1 to 2 spoken-friendly sentences with no bullet points or markdown. Question: {query}"}]
+                }]
+            }
+            resp = requests.post(url, json=payload, timeout=6).json()
+            candidates = resp.get("candidates", [])
+            if candidates:
+                ans = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                if ans:
+                    return clean_spoken_response(ans, max_sentences=2)
+        except Exception as e:
+            print(f"Gemini API notice: {e}")
+
+    # 4. Check DuckDuckGo Instant Answer API
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    try:
+        ddg_api_url = f"https://api.duckduckgo.com/?q={urllib.parse.quote(query)}&format=json&no_html=1&skip_disambig=1"
+        r = requests.get(ddg_api_url, headers=headers, timeout=4).json()
+        ans = r.get('Answer') or r.get('AbstractText')
+        if ans and len(ans) > 25:
+            return clean_spoken_response(ans, max_sentences=2)
+    except Exception:
+        pass
+
+    # 5. Search DuckDuckGo Web Snippets
+    try:
+        r = requests.post('https://html.duckduckgo.com/html/', data={'q': query}, headers=headers, timeout=4)
+        snippets = re.findall(r'result__snippet[^>]*>(.*?)</a>', r.text)
+        if snippets:
+            for s in snippets:
+                clean_s = clean_spoken_response(s, max_sentences=2)
+                if len(clean_s) > 30 and "javascript" not in clean_s.lower():
+                    return clean_s
+    except Exception:
+        pass
+
+    # 6. Wikipedia Search & Summary API
+    try:
+        cleaned_topic = re.sub(r'^(who is|who was|what is|what are|where is|tell me about|explain)\s+', '', query, flags=re.IGNORECASE).strip(' ?.')
+        search_terms = [query, cleaned_topic] if cleaned_topic != query else [query]
+
+        for term in search_terms:
+            search_url = 'https://en.wikipedia.org/w/api.php'
+            params = {'action': 'query', 'list': 'search', 'srsearch': term, 'utf8': '', 'format': 'json', 'srlimit': 3}
+            sr = requests.get(search_url, params=params, headers={'User-Agent': 'JarvisAssistant/2.0'}, timeout=4).json()
+            results = sr.get('query', {}).get('search', [])
+            for res in results:
+                title = res['title']
+                sum_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(title)}"
+                sum_resp = requests.get(sum_url, headers={'User-Agent': 'JarvisAssistant/2.0'}, timeout=4)
+                if sum_resp.status_code == 200:
+                    extract = sum_resp.json().get('extract')
+                    if extract and len(extract) > 40:
+                        return clean_spoken_response(extract, max_sentences=2)
+    except Exception:
+        pass
+
+    return f"I found some information on {query}, but could not fetch a concise answer right now."
+
+
 def chatBot(query):
     user_input = query.lower()
     cookie_path = os.path.join("backend", "cookie.json")
     
+    # 1. Try HugChat if cookie configured
     if os.path.exists(cookie_path):
         try:
             from hugchat import hugchat
@@ -236,19 +349,15 @@ def chatBot(query):
             conv_id = chatbot.new_conversation()
             chatbot.change_conversation(conv_id)
             response = chatbot.chat(user_input)
-            response_text = str(response).strip()
-            # Format punchy spoken-friendly response (strip long markdown lists/bullets)
-            response_text = re.sub(r'[*_#`]', '', response_text)
-            sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', response_text) if s.strip()]
-            spoken_text = " ".join(sentences[:3]) if sentences else response_text
+            spoken_text = clean_spoken_response(str(response), max_sentences=2)
             print(f"AI: {spoken_text}")
             speak(spoken_text)
             return spoken_text
         except Exception as e:
             print(f"HugChat error: {e}")
     
-    # Natural, punchy spoken response with conversational filler
-    fallback_response = f"Got it. I received your request: {query}. Let me know if you want me to open an app, play music, or remember something."
-    print(fallback_response)
-    speak(fallback_response)
-    return fallback_response
+    # 2. Answer via multi-source knowledge & web engine
+    answer = answer_question_web(query)
+    print(f"Jarvis: {answer}")
+    speak(answer)
+    return answer
