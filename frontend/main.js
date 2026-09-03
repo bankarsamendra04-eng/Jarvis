@@ -1,6 +1,11 @@
 $(document).ready(function () {
-
-  eel.init()()
+  if (typeof eel !== "undefined" && eel.init) {
+    try {
+      eel.init()();
+    } catch (err) {
+      console.log("Eel init notice:", err);
+    }
+  }
   $(".text").textillate({
     loop: true,
     speed: 1500,
@@ -41,21 +46,27 @@ $(document).ready(function () {
   });
 
   $("#MicBtn").click(function () {
-    eel.play_assistant_sound();
+    if (typeof eel !== "undefined") {
+      eel.play_assistant_sound();
+    }
     $("#Oval").attr("hidden", true);
     $("#SiriWave").attr("hidden", false);
 
-    eel.takeAllCommands()();
+    if (typeof eel !== "undefined" && eel.takeAllCommands) {
+      eel.takeAllCommands()();
+    }
   });
 
   function doc_keyUp(e) {
-    // this would test for whichever key is 40 (down arrow) and the ctrl key at the same time
-
     if (e.key === "j" && e.metaKey) {
-      eel.play_assistant_sound();
+      if (typeof eel !== "undefined") {
+        eel.play_assistant_sound();
+      }
       $("#Oval").attr("hidden", true);
       $("#SiriWave").attr("hidden", false);
-      eel.takeAllCommands()();
+      if (typeof eel !== "undefined" && eel.takeAllCommands) {
+        eel.takeAllCommands()();
+      }
     }
   }
   document.addEventListener("keyup", doc_keyUp, false);
@@ -64,12 +75,14 @@ $(document).ready(function () {
     if (message != "") {
       $("#Oval").attr("hidden", true);
       $("#SiriWave").attr("hidden", false);
-      eel.takeAllCommands(message);
+      if (typeof eel !== "undefined" && eel.takeAllCommands) {
+        eel.takeAllCommands(message);
+      }
       $("#chatbox").val("");
       $("#MicBtn").attr("hidden", false);
       $("#SendBtn").attr("hidden", true);
     } else {
-      console.log("Empty message, nothing sent."); // Log if the message is empty
+      console.log("Empty message, nothing sent.");
     }
   }
 
