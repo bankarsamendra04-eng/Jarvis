@@ -18,7 +18,7 @@ def play_indian_tts(text):
     Generates and plays natural Indian male accent voice using edge-tts (Neural Indian accent)
     or gTTS (Google India), with pyttsx3 as local fallback.
     """
-    from backend.config import ASSISTANT_VOICE
+    from backend.config import ASSISTANT_VOICE, VOICE_PITCH, VOICE_RATE
     audio_dir = os.path.join("frontend", "assets", "audio")
     os.makedirs(audio_dir, exist_ok=True)
     temp_audio = os.path.join(audio_dir, f"tts_{int(time.time() * 1000)}.mp3")
@@ -29,7 +29,7 @@ def play_indian_tts(text):
         async def _generate():
             # en-IN-PrabhatNeural provides an authentic, natural Indian Male tone for Hinglish and English
             voice = ASSISTANT_VOICE if ASSISTANT_VOICE else "en-IN-PrabhatNeural"
-            com = edge_tts.Communicate(text, voice)
+            com = edge_tts.Communicate(text, voice, rate=VOICE_RATE, pitch=VOICE_PITCH)
             await com.save(temp_audio)
 
         asyncio.run(_generate())
