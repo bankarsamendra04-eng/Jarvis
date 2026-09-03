@@ -9,3 +9,4 @@
   - Practical, step-by-step guidance over abstract theory.
   - Simple English or Hinglish when appropriate.
   - Clear troubleshooting with exact terminal commands, code snippets, and precise file placement instructions.
+
