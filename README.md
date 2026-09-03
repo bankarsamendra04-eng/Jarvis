@@ -22,8 +22,9 @@
 ## 🌟 Key Features & Capabilities
 
 ### 🎙️ 1. Authentic Indian Male Voice & Hinglish Assistant
+- **"Hey Jarvis" Hands-Free Wake Word**: Say *"Hey Jarvis"* (or *"Hello Jarvis"*, *"Jarvis"*) to instantly activate the voice command mic, trigger the waveform UI, and give your instruction.
 - **Human-Grade Neural Voice Engine**: Powered by `edge-tts` (`en-IN-PrabhatNeural`) tuned with deeper baritone resonance, crisp pacing, and commanding volume for a realistic Indian male persona.
-- **Hinglish (Hindi + English) NLP**: Speaks and understands natural conversational Hinglish (e.g., *"Mera naam kya hai?"*, *"VS Code kholo"*, *"Google pe search karo"*, *"Abhi time kitna hua hai?"*).
+- **Hinglish (Hindi + English) NLP**: Speaks and understands natural conversational Hinglish (e.g., *"Hey Jarvis, mera naam kya hai?"*, *"VS Code kholo"*, *"Google pe search karo"*, *"Abhi time kitna hua hai?"*).
 - **Speech Recognition (STT)**: Multi-dialect Indian English & Hindi voice recognition via Google Speech API.
 
 ### 🧠 2. Personal Profile & Long-Term Memory
@@ -154,6 +155,8 @@ python main.py
 
 | Category | Example Commands | Action |
 | :--- | :--- | :--- |
+| **Wake Word Activation** | *"Hey Jarvis"* / *"Hello Jarvis"* | Opens voice command mic and asks: *"Ji Samendra, boliye?"* |
+| **Direct Wake Commands** | *"Hey Jarvis VS Code kholo"* | Strips wake word and launches VS Code immediately |
 | **Personal Profile** | *"Mera naam kya hai?"* / *"Who am I?"* | Answers: *"Aapka naam Samendra Bankar hai."* |
 | **Profile & Tech** | *"Meri education kya hai?"* / *"Mere skills batao"* | Details BTech background, Python, Java, AI/ML, etc. |
 | **Knowledge & Search**| *"Who is the Prime Minister of India?"* | Searches Google & speaks verified answer |
