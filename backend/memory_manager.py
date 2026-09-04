@@ -384,3 +384,4 @@ def getMemoryStats():
         return {"total_memories": total or 0, "categories_count": cats or 0}
     except Exception:
         return {"total_memories": 0, "categories_count": 0}
+

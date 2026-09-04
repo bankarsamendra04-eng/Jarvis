@@ -6,6 +6,7 @@ from backend.auth import recoganize
 from backend.feature import *
 from backend.command import *
 import backend.db  # Ensures database tables are initialized
+import backend.goals_manager  # Ensures goals table and eel endpoints are initialized
 
 def start():
     eel.init("frontend") 

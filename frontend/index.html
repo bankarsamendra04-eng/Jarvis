@@ -145,6 +145,11 @@
           </div>
 
           <div class="nav-right">
+            <button id="btn-open-goals-vault" class="nav-goals-btn" title="Personal Goals & Progress Tracker">
+              <i class="bi bi-trophy-fill text-info"></i>
+              <span>Goals</span>
+              <span id="goals-counter-badge" class="goals-count-badge">0</span>
+            </button>
             <button id="btn-open-memory-vault" class="nav-memory-btn" title="Open Long-Term Memory Vault">
               <i class="bi bi-cpu-fill text-warning"></i>
               <span>Memories</span>
@@ -431,6 +436,190 @@
         <div class="modal-footer-custom">
           <button class="btn-cancel" id="memory-form-cancel">Cancel</button>
           <button class="btn-confirm" id="memory-form-save">Save Memory</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goals & Progress Dashboard Modal -->
+    <div id="goals-dashboard-modal" class="custom-modal-backdrop" style="display: none; z-index: 2150;">
+      <div class="custom-modal-card goals-modal-card">
+        <!-- Modal Header -->
+        <div class="modal-header-custom">
+          <div class="d-flex align-items-center gap-2">
+            <div class="modal-icon-glow goals-glow">
+              <i class="bi bi-trophy-fill text-info"></i>
+            </div>
+            <div>
+              <h5 class="mb-0">Personal Goal & Progress Tracker</h5>
+              <div class="text-muted small">Manage milestones, deadlines & AI daily action plans</div>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn-action-plan-top" id="btn-toggle-action-plan">
+              <i class="bi bi-lightning-charge-fill text-warning"></i> Action Plan
+            </button>
+            <button class="modal-close-btn" id="goals-dashboard-close"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+
+        <!-- Daily Action Plan Section (Collapsible / Banner) -->
+        <div id="daily-action-plan-container" class="action-plan-box mb-3">
+          <div class="action-plan-header">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-calendar2-check-fill text-info"></i>
+              <span class="action-plan-title">Daily Action Plan &bull; <span id="action-plan-date" class="text-info">Today</span></span>
+            </div>
+            <button id="btn-refresh-action-plan" class="btn-refresh-plan" title="Regenerate Plan">
+              <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+          </div>
+          <div id="action-plan-summary" class="action-plan-summary">
+            Loading today's high-priority action items...
+          </div>
+          <div id="daily-action-tasks-list" class="action-tasks-grid">
+            <!-- Action plan tasks rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Goals Stats Bar -->
+        <div class="goals-stats-row">
+          <div class="goal-stat-chip">
+            <span class="stat-label">Active Goals</span>
+            <span class="stat-val text-info" id="stat-active-goals">0</span>
+          </div>
+          <div class="goal-stat-chip">
+            <span class="stat-label">Completed</span>
+            <span class="stat-val text-success" id="stat-completed-goals">0</span>
+          </div>
+          <div class="goal-stat-chip">
+            <span class="stat-label">Avg. Progress</span>
+            <span class="stat-val text-warning" id="stat-avg-progress">0%</span>
+          </div>
+          <div class="goal-stat-chip d-none d-md-flex">
+            <span class="stat-label">Closest to Goal</span>
+            <span class="stat-val text-cyan text-truncate" style="max-width: 160px;" id="stat-closest-goal">-</span>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="memory-toolbar mt-2">
+          <div class="memory-search-wrapper">
+            <i class="bi bi-search"></i>
+            <input type="text" id="search-goals" placeholder="Search goals or milestones..." />
+          </div>
+          <button class="btn-add-memory" id="btn-open-add-goal">
+            <i class="bi bi-plus-circle-fill"></i> New Goal
+          </button>
+        </div>
+
+        <!-- Category & Status Tabs -->
+        <div class="memory-category-tabs" id="goals-category-tabs">
+          <button class="cat-tab active" data-filter="All">All (<span id="count-goals-all">0</span>)</button>
+          <button class="cat-tab" data-filter="Active">Active</button>
+          <button class="cat-tab" data-filter="Learning">Learning</button>
+          <button class="cat-tab" data-filter="Project">Projects</button>
+          <button class="cat-tab" data-filter="Interview">Interviews</button>
+          <button class="cat-tab" data-filter="Portfolio">Portfolio</button>
+          <button class="cat-tab" data-filter="Exam">Exams</button>
+          <button class="cat-tab" data-filter="Internship">Internship</button>
+          <button class="cat-tab" data-filter="Completed">Completed</button>
+        </div>
+
+        <!-- Goal Cards Grid -->
+        <div class="modal-body-custom goals-body-scroll" id="goals-cards-grid">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="modal-footer-custom justify-content-between">
+          <div class="text-muted small d-flex align-items-center gap-1">
+            <i class="bi bi-info-circle text-info"></i> Track progress with voice: <em>"What should I work on today?"</em> or <em>"Update progress to 80%"</em>
+          </div>
+          <button class="btn-cancel" id="goals-dashboard-done-btn">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add / Edit Goal Modal -->
+    <div id="goal-form-modal" class="custom-modal-backdrop" style="display: none; z-index: 2250;">
+      <div class="custom-modal-card goal-edit-card">
+        <div class="modal-header-custom">
+          <h5 id="goal-form-modal-title"><i class="bi bi-pencil-square text-info"></i> Create New Goal</h5>
+          <button class="modal-close-btn" id="goal-form-close"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body-custom">
+          <input type="hidden" id="goal-form-id" value="" />
+          
+          <div class="row g-2 mb-3">
+            <div class="col-md-8">
+              <label for="goal-form-name" class="form-label text-muted small">Goal Name *</label>
+              <input type="text" id="goal-form-name" class="modal-input" placeholder="e.g. Master PyTorch & Deep Learning" />
+            </div>
+            <div class="col-md-4">
+              <label for="goal-form-category" class="form-label text-muted small">Category</label>
+              <select id="goal-form-category" class="modal-input modal-select">
+                <option value="Learning">Learn a Technology</option>
+                <option value="Project">Complete a Project</option>
+                <option value="Interview">Prepare for Interviews</option>
+                <option value="Portfolio">Build a Portfolio</option>
+                <option value="Exam">Prepare for an Exam</option>
+                <option value="Internship">Finish Internship Task</option>
+                <option value="General">General Goal</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="goal-form-description" class="form-label text-muted small">Description</label>
+            <textarea id="goal-form-description" rows="2" class="modal-input" placeholder="Brief outline of objective and outcomes..."></textarea>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-4">
+              <label for="goal-form-deadline" class="form-label text-muted small">Target Deadline</label>
+              <input type="date" id="goal-form-deadline" class="modal-input" />
+            </div>
+            <div class="col-md-4">
+              <label for="goal-form-priority" class="form-label text-muted small">Priority</label>
+              <select id="goal-form-priority" class="modal-input modal-select">
+                <option value="High">High Priority</option>
+                <option value="Medium" selected>Medium Priority</option>
+                <option value="Low">Low Priority</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="goal-form-status" class="form-label text-muted small">Status</label>
+              <select id="goal-form-status" class="modal-input modal-select">
+                <option value="Active" selected>Active</option>
+                <option value="Completed">Completed</option>
+                <option value="On Hold">On Hold</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Milestones Checklist Builder -->
+          <div class="mb-3">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <label class="form-label text-muted small mb-0"><i class="bi bi-list-check text-info"></i> Milestones & Checkpoints</label>
+              <button type="button" class="btn-add-milestone" id="btn-add-form-milestone">
+                <i class="bi bi-plus"></i> Add Milestone
+              </button>
+            </div>
+            <div id="goal-form-milestones-list" class="milestones-form-container">
+              <!-- Dynamically added milestone rows -->
+            </div>
+            <small class="text-muted" style="font-size: 0.72rem;">Checking milestones automatically calculates progress percentage.</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="goal-form-notes" class="form-label text-muted small">Notes & Action Steps</label>
+            <textarea id="goal-form-notes" rows="2" class="modal-input" placeholder="e.g. Daily 1 hour study schedule, study resources link..."></textarea>
+          </div>
+
+          <div id="goal-form-warning" class="alert alert-danger py-2 px-3 small mt-2" style="display: none;"></div>
+        </div>
+        <div class="modal-footer-custom">
+          <button class="btn-cancel" id="goal-form-cancel">Cancel</button>
+          <button class="btn-confirm" id="goal-form-save">Save Goal</button>
         </div>
       </div>
     </div>

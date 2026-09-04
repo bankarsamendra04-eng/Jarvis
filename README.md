@@ -60,6 +60,19 @@
 - **Rich Management**: "+ New Chat" button (`Ctrl+N`), instant search filter, pin/unpin conversations, inline renaming, and safe deletion with confirmation modal.
 - **Auto-Titling**: Automatically generates clean, context-aware titles from the user's first prompt.
 
+### 🎯 9. Personal Goal & Progress Tracking System
+- **Comprehensive Goal Categories**: Track career & learning goals across *Learning a technology, Completing projects, Preparing for exams, Internship tasks, Building portfolio, Technical interview preparation, and General goals*.
+- **Rich Goal Attributes**: Goal Name, Description, Target Deadline (with days remaining countdown), Priority levels (*High, Medium, Low*), Milestones Checklist, Auto-Calculated Progress Percentage (0–100%), Status (*Active, Completed, On Hold*), and Strategy Notes.
+- **AI Daily Action Planner**: Generates a tailored daily action plan with estimated time blocks (30–45 mins each) prioritized from active goals and upcoming deadlines.
+- **Milestone-Driven Progress Engine**: Interactive milestone checkboxes automatically update progress percentage and flip status to Completed upon reaching 100%.
+- **Natural Voice Interaction**:
+  - *"What should I work on today?"* &rarr; Spoken daily action plan with top priority tasks.
+  - *"Show my goals."* &rarr; Spoken summary of active goals and opens Goals Dashboard.
+  - *"Which goal is closest to completion?"* &rarr; Identifies goal nearest 100%.
+  - *"Update progress of Jarvis project to 85%"* &rarr; Updates goal progress via voice.
+  - *"Create a new goal."* &rarr; Opens Goal Creator modal.
+- **Interactive UI Dashboard**: Dedicated modal with stats bar (Active goals, Completed goals, Avg progress %, Closest goal), category filter tabs, search filter, and animated progress bars.
+
 ---
 
 ## 📁 Project Structure
@@ -76,9 +89,11 @@ Jarvis/
 │   │       └── trainer.yml                       # Trained biometric weights
 │   ├── command.py                                # TTS (Indian Voice), STT & command routing
 │   ├── config.py                                 # Voice, user profile & assistant configuration
-│   ├── db.py                                     # SQLite DB (message_logs, web/sys commands, contacts)
+│   ├── db.py                                     # SQLite DB (conversations, messages, logs, commands)
 │   ├── feature.py                                # Universal file opener, Q&A, WhatsApp & YouTube features
+│   ├── goals_manager.py                          # Personal Goal & Progress Tracking + Daily Action Planner
 │   ├── helper.py                                 # String processing and regex helpers
+│   ├── memory_manager.py                         # Secure Categorized Long-Term Memory Vault
 │   └── user_profile.json                         # Permanent user profile data
 ├── frontend/
 │   ├── assets/
@@ -165,6 +180,11 @@ python main.py
 | :--- | :--- | :--- |
 | **Wake Word Activation** | *"Hey Jarvis"* / *"Hello Jarvis"* | Opens voice command mic and asks: *"Ji Samendra, boliye?"* |
 | **Direct Wake Commands** | *"Hey Jarvis VS Code kholo"* | Strips wake word and launches VS Code immediately |
+| **Daily Action Plan** | *"What should I work on today?"* / *"Aaj kya karna hai?"* | Generates and speaks tailored daily action plan |
+| **Goal Summary** | *"Show my goals"* / *"Active goals dikhao"* | Speaks active goals summary and opens Goals Dashboard |
+| **Goal Progress** | *"Which goal is closest to completion?"* | Identifies closest goal and current progress % |
+| **Update Progress** | *"Update progress of Jarvis project to 85%"* | Updates goal progress percentage via voice |
+| **Create New Goal** | *"Create a new goal"* / *"Naya goal banao"* | Opens Goal Creation modal in UI |
 | **Personal Profile** | *"Mera naam kya hai?"* / *"Who am I?"* | Answers: *"Aapka naam Samendra Bankar hai."* |
 | **Profile & Tech** | *"Meri education kya hai?"* / *"Mere skills batao"* | Details BTech background, Python, Java, AI/ML, etc. |
 | **Knowledge & Search**| *"Who is the Prime Minister of India?"* | Searches Google & speaks verified answer |

@@ -213,6 +213,33 @@ def takeAllCommands(message=None):
             elif any(w in query_lower for w in ["update my profile", "update my skills", "update my details", "profile update"]):
                 from backend.feature import updateProfileMemory
                 updateProfileMemory(query)
+            # 2. Goal & Progress Tracking Commands
+            elif any(w in query_lower for w in ["what should i work on today", "what to do today", "aaj kya karu", "aaj kya karna hai", "action plan", "daily action plan", "today plan"]):
+                from backend.goals_manager import get_daily_action_plan_voice
+                res = get_daily_action_plan_voice()
+                speak(res)
+            elif any(w in query_lower for w in ["closest to completion", "closest goal", "kaun sa goal complete hone wala hai", "which goal is closest"]):
+                from backend.goals_manager import get_closest_to_completion_goal
+                res = get_closest_to_completion_goal()
+                speak(res)
+            elif any(w in query_lower for w in ["create a new goal", "create new goal", "add a new goal", "add new goal", "naya goal banao", "new goal"]):
+                try:
+                    eel.openGoalModal()
+                except Exception:
+                    pass
+                speak("Goal create karne ke liye dashboard open kar diya hai. Aap details enter kar sakte hain.")
+            elif any(w in query_lower for w in ["update my progress", "update progress", "progress update", "goal progress"]):
+                from backend.goals_manager import update_goal_progress_voice
+                success, res = update_goal_progress_voice(query)
+                speak(res)
+            elif any(w in query_lower for w in ["show my goals", "show goals", "my goals", "goals dikhao", "active goals", "kya goals hain", "goals batao"]):
+                from backend.goals_manager import get_goals_voice_summary
+                res = get_goals_voice_summary()
+                try:
+                    eel.openGoalsDashboard()
+                except Exception:
+                    pass
+                speak(res)
             elif any(w in query_lower for w in ["open", "launch", "show picture", "show photo", "show file", "show document", "start app", "kholo", "open karo", "chalu karo", "dikhao"]):
                 from backend.feature import openCommand
                 openCommand(query)

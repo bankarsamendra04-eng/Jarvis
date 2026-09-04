@@ -690,6 +690,442 @@ $(document).ready(function () {
   // Initial memory badge update
   updateMemoryBadge();
 
+  // =============================================================
+  // PERSONAL GOAL & PROGRESS TRACKING SYSTEM
+  // =============================================================
+  var currentGoalsCategoryFilter = "All";
+  var currentGoalForAction = null;
+
+  async function updateGoalsBadge() {
+    if (typeof eel === "undefined" || !eel.getGoalsStats) return;
+    try {
+      var stats = await eel.getGoalsStats()();
+      if (stats) {
+        $("#goals-counter-badge").text(stats.active_goals || 0);
+        $("#count-goals-all").text(stats.active_goals + stats.completed_goals || 0);
+        $("#stat-active-goals").text(stats.active_goals || 0);
+        $("#stat-completed-goals").text(stats.completed_goals || 0);
+        $("#stat-avg-progress").text((stats.avg_progress || 0) + "%");
+        
+        if (stats.closest_goal) {
+          $("#stat-closest-goal").text(stats.closest_goal.name + " (" + stats.closest_goal.progress + "%)");
+        } else {
+          $("#stat-closest-goal").text("None");
+        }
+      }
+    } catch (e) {
+      console.log("Error updating goals badge:", e);
+    }
+  }
+
+  async function loadDailyActionPlan() {
+    if (typeof eel === "undefined" || !eel.generateDailyActionPlan) return;
+    try {
+      var plan = await eel.generateDailyActionPlan()();
+      if (!plan) return;
+
+      $("#action-plan-date").text(plan.date || "Today");
+      $("#action-plan-summary").text(plan.summary || "Daily action plan based on your active goals.");
+
+      var container = document.getElementById("daily-action-tasks-list");
+      container.innerHTML = "";
+
+      if (!plan.tasks || plan.tasks.length === 0) {
+        container.innerHTML = '<div class="text-muted small py-2">No pending tasks for today! Great job or create a new goal.</div>';
+        return;
+      }
+
+      plan.tasks.forEach(function (t) {
+        var card = document.createElement("div");
+        card.className = "action-task-card priority-" + (t.priority || "Medium");
+        card.innerHTML = `
+          <div class="action-task-title">${escapeHtml(t.task)}</div>
+          <div class="action-task-meta">
+            <span class="action-task-goal" title="${escapeHtml(t.goal_name)}"><i class="bi bi-flag-fill"></i> ${escapeHtml(t.goal_name)}</span>
+            <span class="action-task-est"><i class="bi bi-stopwatch"></i> ${escapeHtml(t.est_time || "45 mins")}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    } catch (e) {
+      console.log("Error loading daily action plan:", e);
+    }
+  }
+
+  async function loadGoalsDashboard(filter, searchQuery) {
+    if (typeof eel === "undefined" || !eel.getAllGoals) return;
+
+    var filterVal = filter !== undefined ? filter : currentGoalsCategoryFilter;
+    var query = searchQuery !== undefined ? searchQuery : $("#search-goals").val() || "";
+
+    var categoryParam = null;
+    var statusParam = null;
+
+    if (filterVal === "Active") {
+      statusParam = "Active";
+    } else if (filterVal === "Completed") {
+      statusParam = "Completed";
+    } else if (filterVal !== "All") {
+      categoryParam = filterVal;
+    }
+
+    try {
+      var goals = await eel.getAllGoals(categoryParam, statusParam, query)();
+      var grid = document.getElementById("goals-cards-grid");
+      grid.innerHTML = "";
+
+      await updateGoalsBadge();
+
+      if (!goals || goals.length === 0) {
+        grid.innerHTML = `
+          <div class="col-12 text-center py-5 text-muted">
+            <i class="bi bi-trophy" style="font-size: 2.5rem; opacity: 0.4;"></i>
+            <p class="mt-2 mb-1" style="font-size: 0.9rem;">No goals found matching criteria</p>
+            <button class="btn-add-memory mt-2" id="btn-empty-add-goal">
+              <i class="bi bi-plus-circle-fill"></i> Create First Goal
+            </button>
+          </div>
+        `;
+        $("#btn-empty-add-goal").click(function () {
+          $("#btn-open-add-goal").click();
+        });
+        return;
+      }
+
+      goals.forEach(function (g) {
+        var card = createGoalCard(g);
+        grid.appendChild(card);
+      });
+    } catch (e) {
+      console.log("Error loading goals dashboard:", e);
+    }
+  }
+
+  function createGoalCard(g) {
+    var card = document.createElement("div");
+    card.className = "goal-card" + (g.status === "Completed" ? " goal-completed" : "");
+    card.id = "goal-card-" + g.id;
+
+    var isHigh = g.priority === "High";
+    var isMed = g.priority === "Medium";
+    var priorityClass = "priority-" + (g.priority || "Medium");
+    var statusClass = "status-" + (g.status === "On Hold" ? "OnHold" : (g.status || "Active"));
+
+    // Deadline badge
+    var deadlineHtml = "";
+    if (g.deadline) {
+      deadlineHtml = `<div class="goal-deadline-chip"><i class="bi bi-calendar-event"></i> Due ${escapeHtml(g.deadline)}</div>`;
+    }
+
+    // Milestones list
+    var milestones = g.milestones || [];
+    var milestonesHtml = "";
+    if (milestones.length > 0) {
+      var msItems = milestones.map(function (m) {
+        var isChecked = m.completed ? "checked" : "";
+        var titleClass = m.completed ? "milestone-title-text completed" : "milestone-title-text";
+        return `
+          <label class="milestone-item">
+            <input type="checkbox" class="milestone-chk btn-toggle-milestone" data-goal-id="${g.id}" data-milestone-id="${m.id}" ${isChecked} />
+            <span class="${titleClass}">${escapeHtml(m.title)}</span>
+          </label>
+        `;
+      }).join("");
+
+      var completedCount = milestones.filter(function (m) { return m.completed; }).length;
+      milestonesHtml = `
+        <div class="goal-milestones-box">
+          <div class="goal-milestones-header">
+            <span>Milestones (${completedCount}/${milestones.length})</span>
+            <span class="text-cyan">${Math.round((completedCount/milestones.length)*100)}%</span>
+          </div>
+          ${msItems}
+        </div>
+      `;
+    }
+
+    // Notes
+    var notesHtml = "";
+    if (g.notes && g.notes.trim()) {
+      notesHtml = `<div class="goal-notes-box"><i class="bi bi-journal-text text-info"></i> ${escapeHtml(g.notes)}</div>`;
+    }
+
+    // Progress bar class
+    var fillClass = g.progress >= 100 ? "goal-progress-bar-fill fill-100" : "goal-progress-bar-fill";
+
+    card.innerHTML = `
+      <div class="goal-card-header">
+        <div class="goal-badges-row">
+          <div class="goal-badge-group">
+            <span class="badge-cat-Profile badge-cat-${g.category || 'General'} memory-category-badge">${escapeHtml(g.category || "General")}</span>
+            <span class="badge-priority ${priorityClass}">${escapeHtml(g.priority || "Medium")}</span>
+          </div>
+          <span class="badge-goal-status ${statusClass}">${escapeHtml(g.status || "Active")}</span>
+        </div>
+        <div class="goal-title">${escapeHtml(g.name)}</div>
+        ${g.description ? `<div class="goal-desc">${escapeHtml(g.description)}</div>` : ""}
+        ${deadlineHtml}
+      </div>
+
+      <div class="goal-progress-section">
+        <div class="goal-progress-header">
+          <span class="text-muted">Current Progress</span>
+          <span class="prog-pct-label" id="prog-label-${g.id}">${g.progress}%</span>
+        </div>
+        <div class="goal-progress-bar-bg">
+          <div class="${fillClass}" id="prog-bar-${g.id}" style="width: ${g.progress}%;"></div>
+        </div>
+      </div>
+
+      ${milestonesHtml}
+      ${notesHtml}
+
+      <div class="goal-card-footer">
+        <span class="text-muted"><i class="bi bi-clock"></i> Updated ${formatCardTimestamp(g.updated_at)}</span>
+        <div class="goal-actions-group">
+          <button class="btn-goal-action btn-edit-goal" data-goal='${escapeHtml(JSON.stringify(g))}' title="Edit Goal">
+            <i class="bi bi-pencil-square"></i> Edit
+          </button>
+          <button class="btn-goal-action btn-goal-delete btn-delete-goal" data-id="${g.id}" title="Delete Goal">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+
+    return card;
+  }
+
+  // Toggle Milestone Checkbox
+  $(document).on("change", ".btn-toggle-milestone", async function () {
+    var goalId = $(this).data("goal-id");
+    var milestoneId = $(this).data("milestone-id");
+    if (!goalId || !milestoneId) return;
+
+    try {
+      if (typeof eel !== "undefined" && eel.toggleMilestone) {
+        var res = await eel.toggleMilestone(goalId, milestoneId)();
+        if (res && res.status === "success") {
+          // Refresh goal card and stats
+          await loadGoalsDashboard();
+          await loadDailyActionPlan();
+        }
+      }
+    } catch (e) {
+      console.log("Error toggling milestone:", e);
+    }
+  });
+
+  // Open / Close Goals Dashboard Modal
+  $("#btn-open-goals-vault").click(function () {
+    $("#goals-dashboard-modal").fadeIn(200);
+    loadDailyActionPlan();
+    loadGoalsDashboard();
+  });
+
+  $("#goals-dashboard-close, #goals-dashboard-done-btn").click(function () {
+    $("#goals-dashboard-modal").fadeOut(150);
+  });
+
+  // Toggle Action Plan Banner
+  $("#btn-toggle-action-plan").click(function () {
+    $("#daily-action-plan-container").slideToggle(200);
+  });
+
+  $("#btn-refresh-action-plan").click(function () {
+    loadDailyActionPlan();
+  });
+
+  // Category & Filter Tabs
+  $("#goals-category-tabs .cat-tab").click(function () {
+    $("#goals-category-tabs .cat-tab").removeClass("active");
+    $(this).addClass("active");
+    currentGoalsCategoryFilter = $(this).data("filter");
+    loadGoalsDashboard(currentGoalsCategoryFilter);
+  });
+
+  // Search Goals
+  var searchGoalsTimer = null;
+  $("#search-goals").on("input", function () {
+    clearTimeout(searchGoalsTimer);
+    var query = $(this).val();
+    searchGoalsTimer = setTimeout(function () {
+      loadGoalsDashboard(currentGoalsCategoryFilter, query);
+    }, 250);
+  });
+
+  // Open Add Goal Form
+  $("#btn-open-add-goal").click(function () {
+    $("#goal-form-id").val("");
+    $("#goal-form-modal-title").html('<i class="bi bi-trophy-fill text-info"></i> Create New Goal');
+    $("#goal-form-name").val("");
+    $("#goal-form-category").val("Learning");
+    $("#goal-form-description").val("");
+    $("#goal-form-deadline").val("");
+    $("#goal-form-priority").val("Medium");
+    $("#goal-form-status").val("Active");
+    $("#goal-form-notes").val("");
+    $("#goal-form-warning").hide().text("");
+
+    // Reset milestones container with 2 default starter inputs
+    var mlsContainer = document.getElementById("goal-form-milestones-list");
+    mlsContainer.innerHTML = "";
+    addFormMilestoneRow("Phase 1 - Fundamentals & Setup", false);
+    addFormMilestoneRow("Phase 2 - Core Implementation", false);
+
+    $("#goal-form-modal").fadeIn(150);
+    $("#goal-form-name").focus();
+  });
+
+  // Open Edit Goal Form
+  $(document).on("click", ".btn-edit-goal", function () {
+    var goalData = $(this).attr("data-goal");
+    if (!goalData) return;
+    try {
+      var g = JSON.parse(goalData);
+      $("#goal-form-id").val(g.id);
+      $("#goal-form-modal-title").html('<i class="bi bi-pencil-square text-info"></i> Edit Goal');
+      $("#goal-form-name").val(g.name || "");
+      $("#goal-form-category").val(g.category || "General");
+      $("#goal-form-description").val(g.description || "");
+      $("#goal-form-deadline").val(g.deadline || "");
+      $("#goal-form-priority").val(g.priority || "Medium");
+      $("#goal-form-status").val(g.status || "Active");
+      $("#goal-form-notes").val(g.notes || "");
+      $("#goal-form-warning").hide().text("");
+
+      var mlsContainer = document.getElementById("goal-form-milestones-list");
+      mlsContainer.innerHTML = "";
+      var milestones = g.milestones || [];
+      if (milestones.length > 0) {
+        milestones.forEach(function (m) {
+          addFormMilestoneRow(m.title, m.completed);
+        });
+      } else {
+        addFormMilestoneRow("", false);
+      }
+
+      $("#goal-form-modal").fadeIn(150);
+      $("#goal-form-name").focus();
+    } catch (e) {
+      console.log("Error parsing edit goal data:", e);
+    }
+  });
+
+  function addFormMilestoneRow(title, isCompleted) {
+    var container = document.getElementById("goal-form-milestones-list");
+    var row = document.createElement("div");
+    row.className = "milestone-form-row";
+    row.innerHTML = `
+      <input type="checkbox" class="milestone-form-chk" ${isCompleted ? "checked" : ""} title="Mark as completed" />
+      <input type="text" class="modal-input milestone-form-input" style="padding: 4px 8px; font-size: 0.78rem;" placeholder="e.g. Complete chapter 1 & coding practice" value="${escapeHtml(title || "")}" />
+      <button type="button" class="btn-remove-milestone" title="Remove milestone"><i class="bi bi-x-circle"></i></button>
+    `;
+
+    row.querySelector(".btn-remove-milestone").addEventListener("click", function () {
+      row.remove();
+    });
+
+    container.appendChild(row);
+  }
+
+  $("#btn-add-form-milestone").click(function () {
+    addFormMilestoneRow("", false);
+  });
+
+  $("#goal-form-close, #goal-form-cancel").click(function () {
+    $("#goal-form-modal").fadeOut(150);
+  });
+
+  // Save Goal (Create or Update)
+  $("#goal-form-save").click(async function () {
+    var goalId = $("#goal-form-id").val();
+    var name = $("#goal-form-name").val().trim();
+    var category = $("#goal-form-category").val();
+    var description = $("#goal-form-description").val().trim();
+    var deadline = $("#goal-form-deadline").val();
+    var priority = $("#goal-form-priority").val();
+    var status = $("#goal-form-status").val();
+    var notes = $("#goal-form-notes").val().trim();
+
+    if (!name) {
+      $("#goal-form-warning").text("Please enter a goal name.").show();
+      return;
+    }
+
+    // Gather milestones
+    var milestones = [];
+    var rows = document.querySelectorAll("#goal-form-milestones-list .milestone-form-row");
+    var idx = 1;
+    rows.forEach(function (r) {
+      var input = r.querySelector(".milestone-form-input");
+      var chk = r.querySelector(".milestone-form-chk");
+      var text = input ? input.value.trim() : "";
+      if (text) {
+        milestones.push({
+          id: idx++,
+          title: text,
+          completed: chk ? chk.checked : false
+        });
+      }
+    });
+
+    var completedCount = milestones.filter(function (m) { return m.completed; }).length;
+    var progress = milestones.length > 0 ? Math.round((completedCount / milestones.length) * 100) : 0;
+
+    if (goalId) {
+      // Update Goal
+      if (typeof eel !== "undefined" && eel.updateGoal) {
+        var res = await eel.updateGoal(goalId, name, category, description, deadline, priority, milestones, progress, status, notes)();
+      }
+    } else {
+      // Create Goal
+      if (typeof eel !== "undefined" && eel.createGoal) {
+        var res = await eel.createGoal(name, category, description, deadline, priority, milestones, progress, status, notes)();
+      }
+    }
+
+    $("#goal-form-modal").fadeOut(150);
+    await loadGoalsDashboard();
+    await loadDailyActionPlan();
+    await updateGoalsBadge();
+  });
+
+  // Delete Goal
+  $(document).on("click", ".btn-delete-goal", async function () {
+    var goalId = $(this).data("id");
+    if (!goalId) return;
+
+    if (confirm("Are you sure you want to delete this goal and its tracking history?")) {
+      if (typeof eel !== "undefined" && eel.deleteGoal) {
+        await eel.deleteGoal(goalId)();
+        await loadGoalsDashboard();
+        await loadDailyActionPlan();
+        await updateGoalsBadge();
+      }
+    }
+  });
+
+  // Expose methods for Eel to open modals from backend voice commands
+  window.openGoalsDashboardModal = function () {
+    $("#goals-dashboard-modal").fadeIn(200);
+    loadDailyActionPlan();
+    loadGoalsDashboard();
+  };
+
+  window.openGoalCreateModal = function () {
+    $("#btn-open-add-goal").click();
+  };
+
+  if (typeof eel !== "undefined") {
+    eel.expose(openGoalsDashboardModal, "openGoalsDashboard");
+    eel.expose(openGoalCreateModal, "openGoalModal");
+  }
+
+  // Initial goals badge update
+  updateGoalsBadge();
+
+
 
   // -------------------------------------------------------------
   // Date/Time Formatting Utilities

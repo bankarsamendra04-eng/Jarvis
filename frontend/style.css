@@ -1380,3 +1380,509 @@ svg {
   background: #0d121c;
   color: #fff;
 }
+
+/* =========================================================
+   GOALS & PROGRESS TRACKING SYSTEM STYLING
+========================================================= */
+.nav-goals-btn {
+  background: rgba(0, 210, 255, 0.08);
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  color: #00d2ff;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-goals-btn:hover {
+  background: rgba(0, 210, 255, 0.18);
+  border-color: #00d2ff;
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.35);
+  color: #ffffff;
+}
+
+.goals-count-badge {
+  background: rgba(0, 210, 255, 0.25);
+  color: #00d2ff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 210, 255, 0.4);
+}
+
+.goals-modal-card {
+  max-width: 860px;
+  width: 95%;
+  max-height: 90vh;
+}
+
+.goal-edit-card {
+  max-width: 680px;
+  width: 92%;
+  max-height: 92vh;
+}
+
+.goals-glow {
+  background: rgba(0, 210, 255, 0.15) !important;
+  border-color: rgba(0, 210, 255, 0.4) !important;
+  box-shadow: 0 0 14px rgba(0, 210, 255, 0.3) !important;
+}
+
+.btn-action-plan-top {
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-action-plan-top:hover {
+  background: rgba(255, 193, 7, 0.22);
+  border-color: #ffc107;
+}
+
+/* Action Plan Banner */
+.action-plan-box {
+  background: linear-gradient(135deg, rgba(14, 28, 48, 0.9), rgba(18, 38, 68, 0.75));
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.action-plan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.action-plan-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f5;
+}
+
+.btn-refresh-plan {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-refresh-plan:hover {
+  color: #fff;
+  border-color: var(--accent-cyan);
+}
+
+.action-plan-summary {
+  font-size: 0.78rem;
+  color: #9ab4d6;
+  margin-bottom: 8px;
+}
+
+.action-tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+}
+
+.action-task-card {
+  background: rgba(9, 15, 26, 0.7);
+  border: 1px solid rgba(0, 210, 255, 0.15);
+  border-left: 3px solid var(--accent-cyan);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.action-task-card.priority-High { border-left-color: #ff5252; }
+.action-task-card.priority-Medium { border-left-color: #ffb142; }
+.action-task-card.priority-Low { border-left-color: #34ace0; }
+
+.action-task-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.action-task-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.action-task-goal {
+  color: var(--accent-cyan);
+  font-weight: 500;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.action-task-est {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #b0c4de;
+}
+
+/* Goals Stats Row */
+.goals-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.goal-stat-chip {
+  background: rgba(18, 24, 38, 0.7);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 110px;
+}
+
+.stat-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-val {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* Goals Body Scroll & Grid */
+.goals-body-scroll {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 48vh;
+  padding-right: 4px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 12px;
+  scrollbar-width: thin;
+}
+
+/* Goal Card */
+.goal-card {
+  background: rgba(16, 22, 36, 0.85);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.goal-card:hover {
+  background: rgba(22, 32, 52, 0.95);
+  border-color: var(--border-hover);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+}
+
+.goal-card.goal-completed {
+  border-color: rgba(76, 175, 80, 0.35);
+  background: rgba(14, 28, 22, 0.75);
+}
+
+.goal-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.goal-badges-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.goal-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.badge-priority {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.priority-High { background: rgba(255, 82, 82, 0.18); color: #ff5252; border: 1px solid rgba(255, 82, 82, 0.4); }
+.priority-Medium { background: rgba(255, 177, 66, 0.18); color: #ffb142; border: 1px solid rgba(255, 177, 66, 0.4); }
+.priority-Low { background: rgba(52, 172, 224, 0.18); color: #34ace0; border: 1px solid rgba(52, 172, 224, 0.4); }
+
+.badge-goal-status {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.status-Active { background: rgba(0, 210, 255, 0.15); color: #00d2ff; border: 1px solid rgba(0, 210, 255, 0.35); }
+.status-Completed { background: rgba(76, 175, 80, 0.18); color: #4caf50; border: 1px solid rgba(76, 175, 80, 0.4); }
+.status-OnHold { background: rgba(158, 158, 158, 0.18); color: #bdbdbd; border: 1px solid rgba(158, 158, 158, 0.35); }
+
+.goal-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.35;
+}
+
+.goal-desc {
+  font-size: 0.78rem;
+  color: #9eb1cc;
+  line-height: 1.4;
+}
+
+.goal-deadline-chip {
+  font-size: 0.7rem;
+  color: #ffd32a;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 211, 42, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: fit-content;
+  border: 1px solid rgba(255, 211, 42, 0.2);
+}
+
+/* Progress Bar */
+.goal-progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.goal-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+}
+
+.prog-pct-label {
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.goal-progress-bar-bg {
+  width: 100%;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.goal-progress-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #0066ff, #00d2ff);
+  transition: width 0.4s ease;
+  box-shadow: 0 0 8px rgba(0, 210, 255, 0.5);
+}
+
+.goal-progress-bar-fill.fill-100 {
+  background: linear-gradient(90deg, #2ed573, #7bed9f);
+  box-shadow: 0 0 8px rgba(46, 213, 115, 0.5);
+}
+
+/* Milestones Checklist in Card */
+.goal-milestones-box {
+  background: rgba(10, 15, 25, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.goal-milestones-header {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.milestone-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  color: #d1dcec;
+  cursor: pointer;
+  user-select: none;
+}
+
+.milestone-item:hover {
+  color: #fff;
+}
+
+.milestone-chk {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--accent-cyan);
+}
+
+.milestone-title-text {
+  flex: 1;
+  word-break: break-word;
+}
+
+.milestone-title-text.completed {
+  text-decoration: line-through;
+  color: #6c7d96;
+}
+
+/* Notes Section in Card */
+.goal-notes-box {
+  font-size: 0.72rem;
+  color: #8b9db8;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(0, 210, 255, 0.4);
+  padding: 4px 8px;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Card Footer Actions */
+.goal-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 8px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.goal-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-goal-action {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.74rem;
+  transition: all 0.15s;
+}
+
+.btn-goal-action:hover {
+  color: #fff;
+  border-color: var(--accent-cyan);
+  background: rgba(0, 210, 255, 0.1);
+}
+
+.btn-goal-delete:hover {
+  color: #ff5252;
+  border-color: #ff5252;
+  background: rgba(255, 82, 82, 0.15);
+}
+
+/* Milestones Form Builder in Modal */
+.milestones-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+  margin-bottom: 4px;
+}
+
+.milestone-form-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.milestone-form-chk {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-cyan);
+}
+
+.btn-add-milestone {
+  background: rgba(0, 210, 255, 0.1);
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  color: #00d2ff;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-milestone:hover {
+  background: rgba(0, 210, 255, 0.2);
+  color: #fff;
+}
+
+.btn-remove-milestone {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 0.85rem;
+  transition: color 0.15s;
+}
+
+.btn-remove-milestone:hover {
+  color: #ff5252;
+}
+
