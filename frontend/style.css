@@ -2573,4 +2573,62 @@ svg {
   font-weight: 600;
 }
 
+/* =========================================================
+   CHAT RICH CONTENT FORMATTING (MCQs, CODE, HEADERS)
+========================================================= */
+.chat-code-block {
+  background: #080c14;
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #a8d5ff;
+}
+
+.chat-inline-code {
+  background: rgba(0, 210, 255, 0.12);
+  color: var(--accent-cyan);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+}
+
+.chat-header-h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 6px 0 4px 0;
+}
+
+.chat-header-h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin: 6px 0 4px 0;
+}
+
+.chat-header-h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffeaa7;
+  margin: 6px 0 4px 0;
+}
+
+.chat-hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin: 10px 0;
+}
+
+.chat-list-bullet {
+  padding-left: 8px;
+  margin: 2px 0;
+  color: #d1ddf0;
+}
+
+
 

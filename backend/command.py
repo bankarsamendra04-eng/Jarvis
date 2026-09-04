@@ -85,20 +85,21 @@ def play_indian_tts(text):
         print(f"SAPI5 fallback error: {sapi_err}")
         return False
 
-def speak(text):
+def speak(text, display_text=None):
     text = str(text).strip()
     if not text:
         return
         
+    to_display = display_text if display_text else text
     try:
-        eel.DisplayMessage(text)
-        eel.receiverText(text)
+        eel.DisplayMessage(to_display)
+        eel.receiverText(to_display)
     except Exception:
         pass
 
     try:
         from backend.db import store_message_log
-        store_message_log("assistant", text)
+        store_message_log("assistant", to_display)
         try:
             eel.refreshConversations()
         except Exception:
@@ -249,14 +250,6 @@ def takeAllCommands(message=None):
                 from backend.study_manager import stopStudyMode
                 stopStudyMode()
                 speak("AI Study Mode band kar diya gaya hai. Shabash Samendra!")
-            elif any(w in query_lower for w in ["explain this simply", "explain simply", "simple language mein samjhao", "simple bhasha mein samjhao"]):
-                from backend.study_manager import explain_simple_voice
-                res = explain_simple_voice(query)
-                speak(res)
-            elif any(w in query_lower for w in ["give me 10 mcqs", "give me mcqs", "take mcq", "mcq test", "test me on networking", "test me on", "quiz me on"]):
-                from backend.study_manager import get_mcqs_voice
-                res = get_mcqs_voice(query)
-                speak(res)
             elif any(w in query_lower for w in ["take my viva", "viva question", "viva lo", "take viva"]):
                 from backend.study_manager import get_viva_voice
                 res = get_viva_voice(query)
@@ -301,8 +294,11 @@ def takeAllCommands(message=None):
                 except Exception:
                     pass
 
-                from backend.feature import chatBot
-                chatBot(query)
+                # Process via Master Intent & Knowledge Engine
+                from backend.intent_engine import process_user_query_with_intent
+                display_content, spoken_text = process_user_query_with_intent(query)
+                print(f"Jarvis Spoken: {spoken_text}")
+                speak(spoken_text, display_text=display_content)
         else:
             speak("Koi command nahi mila.")
     except Exception as e:

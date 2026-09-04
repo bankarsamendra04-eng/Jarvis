@@ -580,7 +580,7 @@ def answer_question_web(query):
         ans = r.get('Answer') or r.get('AbstractText')
         if ans and len(ans) > 25:
             clean_ans = clean_spoken_response(ans, max_sentences=2)
-            return f"Google search ke anusaar: {clean_ans}"
+            return clean_ans
     except Exception:
         pass
 
@@ -592,7 +592,7 @@ def answer_question_web(query):
             for s in snippets:
                 clean_s = clean_spoken_response(s, max_sentences=2)
                 if len(clean_s) > 30 and "javascript" not in clean_s.lower():
-                    return f"Search result ke mutabiq: {clean_s}"
+                    return clean_s
     except Exception:
         pass
 
@@ -614,11 +614,11 @@ def answer_question_web(query):
                     extract = sum_resp.json().get('extract')
                     if extract and len(extract) > 40:
                         clean_wiki = clean_spoken_response(extract, max_sentences=2)
-                        return f"Search information ke mutabiq: {clean_wiki}"
+                        return clean_wiki
     except Exception:
         pass
 
-    return f"Mujhe {query} ke baare mein jankari mili hai, par abhi concise summary nahi nikal paya."
+    return f"{query.title()} ek important concept hai. Iske specific practical use cases aur details aap pooch sakte hain."
 
 
 def chatBot(query):

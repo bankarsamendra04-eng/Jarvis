@@ -62,11 +62,12 @@ $(document).ready(function () {
 
     var chatBox = document.getElementById("chat-canvas-body");
     var timeStr = timestamp || formatCurrentTime();
+    var formattedMsg = renderRichMessageHtml(message);
 
     var msgHtml = `
       <div class="message-row assistant-row">
         <div class="message-bubble assistant-bubble">
-          <div class="message-content">${escapeHtml(message)}</div>
+          <div class="message-content">${formattedMsg}</div>
           <div class="message-meta">
             <i class="bi bi-robot me-1 text-info"></i> ${timeStr}
           </div>
@@ -76,6 +77,42 @@ $(document).ready(function () {
 
     chatBox.innerHTML += msgHtml;
     scrollToBottom();
+  }
+
+  function renderRichMessageHtml(text) {
+    if (!text) return "";
+    var escaped = escapeHtml(text);
+
+    // Code blocks ```lang\ncode\n```
+    escaped = escaped.replace(/```(?:[a-zA-Z0-9_\-]+)?\n?([\s\S]*?)```/g, function(match, code) {
+      return '<pre class="chat-code-block"><code>' + code + '</code></pre>';
+    });
+
+    // Inline code `code`
+    escaped = escaped.replace(/`([^`]+)`/g, '<code class="chat-inline-code">$1</code>');
+
+    // Headers
+    escaped = escaped.replace(/^### (.*$)/gim, '<div class="chat-header-h3">$1</div>');
+    escaped = escaped.replace(/^## (.*$)/gim, '<div class="chat-header-h2">$1</div>');
+    escaped = escaped.replace(/^# (.*$)/gim, '<div class="chat-header-h1">$1</div>');
+
+    // Bold **text**
+    escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Horizontal rules
+    escaped = escaped.replace(/^---$/gim, '<hr class="chat-hr"/>');
+
+    // List items
+    escaped = escaped.replace(/^- (.*$)/gim, '<div class="chat-list-bullet">&bull; $1</div>');
+
+    // Newlines to <br/> outside pre blocks
+    var parts = escaped.split(/(<pre[\s\S]*?<\/pre>)/g);
+    for (var i = 0; i < parts.length; i++) {
+      if (!parts[i].startsWith('<pre')) {
+        parts[i] = parts[i].replace(/\n/g, '<br/>');
+      }
+    }
+    return parts.join('');
   }
 
   // -------------------------------------------------------------

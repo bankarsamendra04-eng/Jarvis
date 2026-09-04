@@ -82,6 +82,14 @@
   - *"Show my weak topics."* &rarr; Spoken summary of flagged topics needing revision.
   - *"Revise today's topics."* &rarr; Initiates personalized revision on highest-error weak topic.
 
+### ⚡ 11. Master Intent Engine & Direct Output Generation
+- **Zero Meta Phrasing**: Completely eliminates meta responses (*"Search results ke anusaar..."*, *"According to the search results..."*, *"Based on the available results..."*). Delivers exact requested content directly.
+- **Intelligent Intent Classification**: Seamlessly classifies requests internally into `MCQ_GENERATION`, `EXPLANATION`, `CODING`, `DEBUGGING`, `VIVA`, `CALCULATION`, `STUDY`, and `QUESTION_ANSWER`.
+- **Exact Count MCQ Delivery**: When asked for MCQs (e.g. *"Give me 10 MCQs on OSI model"*), generates the exact requested count with 4 structured options, Answer Key, and pedagogical explanations.
+- **6-Part Pedagogical Explanations**: Structured format providing (1) Definition, (2) Purpose, (3) Step-by-Step Breakdown, (4) Real-World Analogy, (5) Mnemonic / Memory trick, and (6) Exam & Viva Voce key points.
+- **Complete Tested Code & Complexity Analysis**: Generates complete runnable code with time/space complexity analysis and execution commands.
+- **Dual Screen & Voice Delivery**: Decouples rich full-text markdown output on the GUI chat display from concise, punchy natural voice summaries spoken over TTS.
+
 ---
 
 ## 📁 Project Structure
@@ -102,6 +110,7 @@ Jarvis/
 │   ├── feature.py                                # Universal file opener, Q&A, WhatsApp & YouTube features
 │   ├── goals_manager.py                          # Personal Goal & Progress Tracking + Daily Action Planner
 │   ├── helper.py                                 # String processing and regex helpers
+│   ├── intent_engine.py                          # Master Intent Engine, Direct Output & Meta-Phrase Filter
 │   ├── memory_manager.py                         # Secure Categorized Long-Term Memory Vault
 │   ├── study_manager.py                          # AI Study Mode, MCQs, Viva, Exam Q&A & Weak-Topic Detector
 │   └── user_profile.json                         # Permanent user profile data
