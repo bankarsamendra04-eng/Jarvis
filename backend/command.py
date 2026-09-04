@@ -240,6 +240,35 @@ def takeAllCommands(message=None):
                 except Exception:
                     pass
                 speak(res)
+            # 3. AI Study Mode Commands
+            elif any(w in query_lower for w in ["start study mode", "enable study mode", "study mode on", "padhai shuru karo", "study mode start"]):
+                from backend.study_manager import start_study_mode_voice
+                res = start_study_mode_voice(query)
+                speak(res)
+            elif any(w in query_lower for w in ["stop study mode", "exit study mode", "study mode off", "padhai band karo"]):
+                from backend.study_manager import stopStudyMode
+                stopStudyMode()
+                speak("AI Study Mode band kar diya gaya hai. Shabash Samendra!")
+            elif any(w in query_lower for w in ["explain this simply", "explain simply", "simple language mein samjhao", "simple bhasha mein samjhao"]):
+                from backend.study_manager import explain_simple_voice
+                res = explain_simple_voice(query)
+                speak(res)
+            elif any(w in query_lower for w in ["give me 10 mcqs", "give me mcqs", "take mcq", "mcq test", "test me on networking", "test me on", "quiz me on"]):
+                from backend.study_manager import get_mcqs_voice
+                res = get_mcqs_voice(query)
+                speak(res)
+            elif any(w in query_lower for w in ["take my viva", "viva question", "viva lo", "take viva"]):
+                from backend.study_manager import get_viva_voice
+                res = get_viva_voice(query)
+                speak(res)
+            elif any(w in query_lower for w in ["show my weak topics", "weak topics", "mere weak topics", "weak areas"]):
+                from backend.study_manager import get_weak_topics_voice
+                res = get_weak_topics_voice()
+                speak(res)
+            elif any(w in query_lower for w in ["revise today's topics", "revise today", "revision session", "revise weak topics", "revision karo"]):
+                from backend.study_manager import get_revision_voice
+                res = get_revision_voice()
+                speak(res)
             elif any(w in query_lower for w in ["open", "launch", "show picture", "show photo", "show file", "show document", "start app", "kholo", "open karo", "chalu karo", "dikhao"]):
                 from backend.feature import openCommand
                 openCommand(query)

@@ -145,6 +145,11 @@
           </div>
 
           <div class="nav-right">
+            <button id="btn-open-study-mode" class="nav-study-btn" title="AI Study Mode & Academic Coach">
+              <i class="bi bi-mortarboard-fill text-warning"></i>
+              <span>Study Mode</span>
+              <span id="study-mode-active-dot" class="study-active-indicator"></span>
+            </button>
             <button id="btn-open-goals-vault" class="nav-goals-btn" title="Personal Goals & Progress Tracker">
               <i class="bi bi-trophy-fill text-info"></i>
               <span>Goals</span>
@@ -620,6 +625,303 @@
         <div class="modal-footer-custom">
           <button class="btn-cancel" id="goal-form-cancel">Cancel</button>
           <button class="btn-confirm" id="goal-form-save">Save Goal</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Study Mode & Academic Coach Modal -->
+    <div id="study-mode-modal" class="custom-modal-backdrop" style="display: none; z-index: 2200;">
+      <div class="custom-modal-card study-modal-card">
+        <!-- Header -->
+        <div class="modal-header-custom">
+          <div class="d-flex align-items-center gap-2">
+            <div class="modal-icon-glow study-glow">
+              <i class="bi bi-mortarboard-fill text-warning"></i>
+            </div>
+            <div>
+              <h5 class="mb-0">AI Study Mode & Academic Coach</h5>
+              <div class="text-muted small">Concepts, Hinglish Breakdown, MCQs, Viva, Exam Questions & Weak-Topic Detection</div>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <select id="study-subject-select" class="study-subject-dropdown" title="Select Active Subject">
+              <option value="Computer Networks" selected>Computer Networks</option>
+              <option value="Operating Systems">Operating Systems</option>
+              <option value="Database Management Systems">Database Systems (DBMS)</option>
+              <option value="Data Structures & Algorithms">Data Structures & Algorithms</option>
+              <option value="AI & Machine Learning">AI & Machine Learning</option>
+            </select>
+            <button id="btn-toggle-study-active" class="btn-study-power" title="Toggle Study Mode Active">
+              <i class="bi bi-power"></i> <span id="study-power-text">Active</span>
+            </button>
+            <button class="modal-close-btn" id="study-mode-close"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+
+        <!-- Quick Study Stats Bar -->
+        <div class="study-stats-row">
+          <div class="study-stat-item">
+            <span class="stat-label">Mode Status</span>
+            <span class="stat-val text-success d-flex align-items-center gap-1" id="study-stat-status">
+              <span class="status-dot pulse"></span> Active
+            </span>
+          </div>
+          <div class="study-stat-item">
+            <span class="stat-label">Subject</span>
+            <span class="stat-val text-info text-truncate" style="max-width: 160px;" id="study-stat-subject">Computer Networks</span>
+          </div>
+          <div class="study-stat-item">
+            <span class="stat-label">Quiz Accuracy</span>
+            <span class="stat-val text-warning" id="study-stat-accuracy">0%</span>
+          </div>
+          <div class="study-stat-item">
+            <span class="stat-label">Weak Topics</span>
+            <span class="stat-val text-danger" id="study-stat-weak">0 Flagged</span>
+          </div>
+        </div>
+
+        <!-- Study Tool Navigation Tabs -->
+        <div class="study-nav-tabs">
+          <button class="study-tab-btn active" data-tab="concept"><i class="bi bi-book-half"></i> Explainer</button>
+          <button class="study-tab-btn" data-tab="mcq"><i class="bi bi-check2-square"></i> MCQ Quiz</button>
+          <button class="study-tab-btn" data-tab="viva"><i class="bi bi-mic"></i> Viva Voce</button>
+          <button class="study-tab-btn" data-tab="exam"><i class="bi bi-journal-text"></i> Exam Q&A</button>
+          <button class="study-tab-btn" data-tab="flashcards"><i class="bi bi-card-text"></i> Flashcards</button>
+          <button class="study-tab-btn" data-tab="weak"><i class="bi bi-exclamation-triangle"></i> Weak Topics (<span id="weak-tab-count">0</span>)</button>
+        </div>
+
+        <!-- Tool Content Area (Scrollable) -->
+        <div class="study-tool-viewport">
+          <!-- 1. Concept Explainer Tab -->
+          <div id="study-tab-concept" class="study-tab-pane active">
+            <div class="study-explainer-toolbar">
+              <div class="memory-search-wrapper" style="flex: 1;">
+                <i class="bi bi-search"></i>
+                <input type="text" id="study-concept-search" placeholder="Search topic (e.g. OSI Model, Deadlock, ACID, TCP/UDP)..." />
+              </div>
+              <div class="btn-group-format">
+                <button class="btn-exp-format active" data-fmt="simple">Simple & Hinglish</button>
+                <button class="btn-exp-format" data-fmt="step_by_step">Step-by-Step</button>
+                <button class="btn-exp-format" data-fmt="example">Real-World Analogy</button>
+              </div>
+            </div>
+
+            <!-- Quick Topic Badges -->
+            <div id="study-quick-topics" class="quick-topics-row mb-3">
+              <!-- Dynamically filled with subject's topics -->
+            </div>
+
+            <!-- Formatted Explanation Card -->
+            <div id="study-concept-card" class="study-concept-card">
+              <div class="concept-card-header">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge-cat-Skills memory-category-badge" id="concept-subject-badge">Computer Networks</span>
+                  <h4 id="concept-title" class="mb-0 text-white">OSI Model</h4>
+                </div>
+                <button id="btn-speak-concept" class="btn-speak-study" title="Read explanation aloud">
+                  <i class="bi bi-volume-up-fill text-info"></i> Listen
+                </button>
+              </div>
+
+              <div class="concept-body mt-3">
+                <div class="concept-section-title"><i class="bi bi-stars text-warning"></i> Core Concept</div>
+                <div id="concept-simple-text" class="concept-text">
+                  OSI (Open Systems Interconnection) model ek 7-layer framework hai jo batata hai ki computer networks mein data ek device se doosre device tak kaise travel karta hai.
+                </div>
+
+                <div class="concept-section-title mt-3"><i class="bi bi-list-ol text-info"></i> Step-by-Step Breakdown</div>
+                <div id="concept-steps-list" class="concept-steps-container">
+                  <!-- Steps rendered here -->
+                </div>
+
+                <div class="concept-section-title mt-3"><i class="bi bi-lightbulb-fill text-warning"></i> Real-World Example</div>
+                <div id="concept-example-text" class="concept-example-box">
+                  Real-world analogy: Jaise ek letter post office se deliver hota hai.
+                </div>
+
+                <div class="concept-section-title mt-3"><i class="bi bi-bookmark-check-fill text-success"></i> Key Takeaway</div>
+                <div id="concept-summary-text" class="concept-summary-box">
+                  7 Layers: Physical, Data Link, Network, Transport, Session, Presentation, Application.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. MCQ Quiz Tab -->
+          <div id="study-tab-mcq" class="study-tab-pane">
+            <div id="mcq-quiz-active-container">
+              <div class="quiz-status-header">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-primary text-white" id="quiz-question-counter">Question 1 of 5</span>
+                  <span class="badge bg-dark border border-secondary text-info" id="quiz-topic-badge">OSI Model</span>
+                </div>
+                <div class="quiz-score-badge">
+                  <span>Score: </span><strong id="quiz-live-score" class="text-warning">0</strong> / <span id="quiz-total-score">5</span>
+                </div>
+              </div>
+
+              <!-- Question Card -->
+              <div class="quiz-question-card mt-3">
+                <div id="quiz-question-text" class="quiz-q-text">
+                  Which layer of the OSI model is responsible for end-to-end error recovery and flow control?
+                </div>
+
+                <!-- Options -->
+                <div id="quiz-options-list" class="quiz-options-grid mt-3">
+                  <!-- Dynamic Options A, B, C, D -->
+                </div>
+
+                <!-- Immediate Explanation Reveal -->
+                <div id="quiz-explanation-box" class="quiz-exp-box mt-3" style="display: none;">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-info-circle-fill text-info"></i>
+                    <strong>Explanation:</strong>
+                  </div>
+                  <div id="quiz-exp-content" class="small text-light"></div>
+                </div>
+
+                <div class="quiz-actions-footer mt-3">
+                  <button id="btn-next-quiz-q" class="btn-confirm" style="display: none;">Next Question <i class="bi bi-arrow-right"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quiz Result Summary Card (Hidden initially) -->
+            <div id="mcq-quiz-result-container" class="quiz-result-card" style="display: none;">
+              <div class="text-center py-4">
+                <div class="quiz-trophy-glow mb-2">
+                  <i class="bi bi-trophy-fill text-warning"></i>
+                </div>
+                <h3 class="text-white mb-1">Quiz Completed!</h3>
+                <p class="text-muted small">Here is your performance report</p>
+
+                <div class="result-score-circle mt-3">
+                  <div class="result-score-pct" id="result-final-pct">80%</div>
+                  <div class="result-score-sub" id="result-final-fraction">4 / 5 Correct</div>
+                </div>
+
+                <div id="result-weak-alert" class="alert alert-warning py-2 px-3 small mt-3 mx-auto" style="max-width: 480px; display: none;">
+                  <i class="bi bi-exclamation-triangle-fill"></i> Weak topics identified: <span id="result-weak-topics-list"></span>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-center gap-3 mt-4">
+                  <button id="btn-retake-quiz" class="btn-cancel"><i class="bi bi-arrow-repeat"></i> Retake Quiz</button>
+                  <button id="btn-review-weak-quiz" class="btn-confirm"><i class="bi bi-stars"></i> Review Weak Topics</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Viva Voce Tab -->
+          <div id="study-tab-viva" class="study-tab-pane">
+            <div class="viva-header-toolbar">
+              <span class="text-muted small"><i class="bi bi-mic-fill text-danger"></i> Interactive Oral Interview & Viva Practice</span>
+              <button id="btn-refresh-viva" class="btn-refresh-plan"><i class="bi bi-arrow-clockwise"></i> Next Viva Question</button>
+            </div>
+
+            <div class="viva-question-card mt-3">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="badge bg-secondary text-white" id="viva-topic-badge">TCP vs UDP</span>
+                <button id="btn-speak-viva" class="btn-speak-study"><i class="bi bi-volume-up-fill text-info"></i> Hear Question</button>
+              </div>
+
+              <div id="viva-question-text" class="viva-q-text">
+                Why is UDP preferred over TCP for live video streaming and gaming?
+              </div>
+
+              <div class="viva-mic-prompt mt-3">
+                <div class="text-muted small"><i class="bi bi-info-circle text-info"></i> Think of your answer or speak aloud, then click below to inspect the ideal model response.</div>
+              </div>
+
+              <button id="btn-reveal-viva-answer" class="btn-add-memory mt-3">
+                <i class="bi bi-eye-fill"></i> Reveal Model Answer & Evaluation
+              </button>
+
+              <!-- Model Answer Container -->
+              <div id="viva-model-answer-box" class="viva-answer-box mt-3" style="display: none;">
+                <div class="viva-ans-title"><i class="bi bi-check-circle-fill text-success"></i> Model Examiner Response:</div>
+                <div id="viva-answer-text" class="viva-ans-content mt-2"></div>
+
+                <div class="viva-self-eval mt-3">
+                  <span class="small text-muted">How did you perform?</span>
+                  <div class="d-flex align-items-center gap-2 mt-1">
+                    <button class="btn-eval-strong" id="btn-viva-strong"><i class="bi bi-emoji-smile-fill"></i> Strong (Mastered)</button>
+                    <button class="btn-eval-weak" id="btn-viva-weak"><i class="bi bi-emoji-frown-fill"></i> Needs Practice (Flag Weak)</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Exam Questions Tab -->
+          <div id="study-tab-exam" class="study-tab-pane">
+            <div class="exam-filter-row mb-3">
+              <button class="cat-tab active" data-exam-type="all">All Questions</button>
+              <button class="cat-tab" data-exam-type="short">Short (2-3 Marks)</button>
+              <button class="cat-tab" data-exam-type="long">Long (5-10 Marks)</button>
+            </div>
+
+            <div id="exam-questions-list" class="exam-questions-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- 5. Flashcards Tab -->
+          <div id="study-tab-flashcards" class="study-tab-pane">
+            <div class="flashcards-wrapper">
+              <div class="flashcard-status-bar">
+                <span id="fc-counter" class="text-info font-weight-bold">Card 1 of 4</span>
+                <span class="text-muted small"><i class="bi bi-hand-index-thumb"></i> Click card to flip</span>
+              </div>
+
+              <!-- 3D Flashcard Element -->
+              <div id="study-flashcard" class="flashcard-3d">
+                <div class="flashcard-inner">
+                  <div class="flashcard-front">
+                    <div class="fc-badge">QUESTION / TERM</div>
+                    <div id="fc-front-text" class="fc-text">OSI Layer 3</div>
+                    <div class="fc-hint"><i class="bi bi-arrow-repeat"></i> Click to reveal answer</div>
+                  </div>
+                  <div class="flashcard-back">
+                    <div class="fc-badge text-success">EXPLANATION / ANSWER</div>
+                    <div id="fc-back-text" class="fc-text">Network Layer: Handles IP addressing, packet forwarding, and routing protocols.</div>
+                    <div class="fc-hint"><i class="bi bi-arrow-repeat"></i> Click to flip back</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flashcard-controls mt-4">
+                <button id="btn-fc-prev" class="btn-cancel"><i class="bi bi-chevron-left"></i> Previous</button>
+                <button id="btn-fc-flip" class="btn-add-memory"><i class="bi bi-arrow-repeat"></i> Flip</button>
+                <button id="btn-fc-next" class="btn-confirm">Next <i class="bi bi-chevron-right"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. Weak Topics & Analytics Tab -->
+          <div id="study-tab-weak" class="study-tab-pane">
+            <div class="weak-topics-header mb-3">
+              <div>
+                <h6 class="text-white mb-0"><i class="bi bi-exclamation-triangle-fill text-warning"></i> Weak Topics & Personalized Revision</h6>
+                <div class="text-muted small">Topics identified from incorrect quiz attempts and viva evaluations</div>
+              </div>
+              <button id="btn-start-weak-revision" class="btn-add-memory">
+                <i class="bi bi-stars"></i> Revise Weak Topics
+              </button>
+            </div>
+
+            <div id="weak-topics-list" class="weak-topics-grid">
+              <!-- Dynamically populated weak topics -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer-custom justify-content-between">
+          <div class="text-muted small d-flex align-items-center gap-1">
+            <i class="bi bi-mic text-info"></i> Voice controls: <em>"Explain this simply"</em>, <em>"Give me 10 MCQs"</em>, <em>"Take my viva"</em>, <em>"Show my weak topics"</em>
+          </div>
+          <button class="btn-cancel" id="study-mode-done-btn">Done</button>
         </div>
       </div>
     </div>

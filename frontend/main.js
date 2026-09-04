@@ -1125,6 +1125,567 @@ $(document).ready(function () {
   // Initial goals badge update
   updateGoalsBadge();
 
+  // =============================================================
+  // AI STUDY MODE & ACADEMIC COACH
+  // =============================================================
+  var studyActiveSubject = "Computer Networks";
+  var studyCurrentTab = "concept";
+  var studyCurrentFormat = "simple";
+  var currentMCQList = [];
+  var currentMCQIndex = 0;
+  var currentMCQScore = 0;
+  var currentIncorrectTopics = [];
+  var currentFlashcards = [];
+  var currentFCIndex = 0;
+  var currentVivaList = [];
+  var currentVivaIndex = 0;
+  var isStudyModeActiveState = true;
+
+  // Study Mode Subjects and quick topics map
+  var subjectTopicsMap = {
+    "Computer Networks": ["OSI Model", "TCP vs UDP", "DNS & HTTP/HTTPS", "IP Addressing & Subnetting", "Routing Algorithms", "Congestion Control"],
+    "Operating Systems": ["Process vs Thread", "CPU Scheduling", "Deadlocks & Banker's Algorithm", "Paging & Virtual Memory", "Semaphores & Mutex"],
+    "Database Management Systems": ["ACID Properties", "Normalization (1NF to BCNF)", "SQL vs NoSQL", "Indexing & B-Trees", "Transactions & Concurrency Control"],
+    "Data Structures & Algorithms": ["Time & Space Complexity", "Arrays & Two Pointers", "Trees & BST", "Dynamic Programming", "Graphs & BFS/DFS"],
+    "AI & Machine Learning": ["Supervised vs Unsupervised", "Overfitting & Regularization", "Neural Networks & Backprop", "CNNs & Transformers", "Gradient Descent Optimization"]
+  };
+
+  async function loadStudyStats() {
+    if (typeof eel === "undefined" || !eel.getStudyStats) return;
+    try {
+      var stats = await eel.getStudyStats()();
+      if (stats) {
+        isStudyModeActiveState = stats.is_active;
+        if (stats.active_subject) {
+          studyActiveSubject = stats.active_subject;
+          $("#study-subject-select").val(studyActiveSubject);
+        }
+
+        $("#study-stat-subject").text(studyActiveSubject);
+        $("#study-stat-accuracy").text((stats.avg_score || 0) + "%");
+        $("#study-stat-weak").text((stats.weak_count || 0) + " Flagged");
+        $("#weak-tab-count").text(stats.weak_count || 0);
+
+        if (stats.is_active) {
+          $("#study-stat-status").html('<span class="status-dot pulse"></span> Active');
+          $("#study-mode-active-dot").show();
+          $("#study-power-text").text("Active");
+          $("#btn-toggle-study-active").removeClass("inactive");
+        } else {
+          $("#study-stat-status").html('<span class="status-dot bg-secondary"></span> Inactive');
+          $("#study-mode-active-dot").hide();
+          $("#study-power-text").text("Inactive");
+          $("#btn-toggle-study-active").addClass("inactive");
+        }
+      }
+    } catch (e) {
+      console.log("Error loading study stats:", e);
+    }
+  }
+
+  // Render quick topics for active subject
+  function renderQuickTopicChips() {
+    var container = document.getElementById("study-quick-topics");
+    container.innerHTML = "";
+    var topics = subjectTopicsMap[studyActiveSubject] || [];
+    topics.forEach(function (t, i) {
+      var chip = document.createElement("button");
+      chip.className = "quick-topic-chip" + (i === 0 ? " active" : "");
+      chip.textContent = t;
+      chip.addEventListener("click", function () {
+        $(".quick-topic-chip").removeClass("active");
+        $(this).addClass("active");
+        loadConceptExplainer(t);
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  // 1. Concept Explainer Loader
+  async function loadConceptExplainer(topicQuery) {
+    if (typeof eel === "undefined" || !eel.explainConcept) return;
+    try {
+      var data = await eel.explainConcept(topicQuery, studyActiveSubject, studyCurrentFormat)();
+      if (!data) return;
+
+      $("#concept-subject-badge").text(data.subject);
+      $("#concept-title").text(data.topic);
+      $("#concept-simple-text").text(data.simple || "No simple explanation available.");
+
+      // Steps
+      var stepsContainer = document.getElementById("concept-steps-list");
+      stepsContainer.innerHTML = "";
+      if (data.step_by_step && data.step_by_step.length > 0) {
+        data.step_by_step.forEach(function (step) {
+          var item = document.createElement("div");
+          item.className = "concept-step-item";
+          item.textContent = step;
+          stepsContainer.appendChild(item);
+        });
+      } else {
+        stepsContainer.innerHTML = '<div class="text-muted small">No step-by-step breakdown available.</div>';
+      }
+
+      $("#concept-example-text").text(data.example || "Real-world analogy will appear here.");
+      $("#concept-summary-text").text(data.summary || "Key takeaways.");
+    } catch (e) {
+      console.log("Error loading concept:", e);
+    }
+  }
+
+  // 2. MCQ Quiz Engine
+  async function startMCQQuiz(topic) {
+    if (typeof eel === "undefined" || !eel.getStudyMCQs) return;
+    try {
+      var data = await eel.getStudyMCQs(studyActiveSubject, topic, 5)();
+      if (!data || !data.mcqs || data.mcqs.length === 0) return;
+
+      currentMCQList = data.mcqs;
+      currentMCQIndex = 0;
+      currentMCQScore = 0;
+      currentIncorrectTopics = [];
+
+      $("#mcq-quiz-active-container").show();
+      $("#mcq-quiz-result-container").hide();
+      $("#quiz-total-score").text(currentMCQList.length);
+
+      renderCurrentMCQ();
+    } catch (e) {
+      console.log("Error starting MCQ quiz:", e);
+    }
+  }
+
+  function renderCurrentMCQ() {
+    if (currentMCQIndex >= currentMCQList.length) {
+      finishMCQQuiz();
+      return;
+    }
+
+    var q = currentMCQList[currentMCQIndex];
+    $("#quiz-question-counter").text("Question " + (currentMCQIndex + 1) + " of " + currentMCQList.length);
+    $("#quiz-topic-badge").text(q.topic || studyActiveSubject);
+    $("#quiz-live-score").text(currentMCQScore);
+    $("#quiz-question-text").text(q.question);
+    $("#quiz-explanation-box").hide();
+    $("#btn-next-quiz-q").hide();
+
+    var optionsContainer = document.getElementById("quiz-options-list");
+    optionsContainer.innerHTML = "";
+
+    q.options.forEach(function (opt) {
+      var optLetter = opt.trim().charAt(0);
+      var btn = document.createElement("button");
+      btn.className = "quiz-option-btn";
+      btn.textContent = opt;
+
+      btn.addEventListener("click", function () {
+        if (btn.classList.contains("disabled")) return;
+
+        // Disable all options
+        var allBtns = optionsContainer.querySelectorAll(".quiz-option-btn");
+        allBtns.forEach(function (b) { b.classList.add("disabled"); });
+
+        var isCorrect = optLetter.toUpperCase() === q.answer.toUpperCase();
+        if (isCorrect) {
+          btn.classList.add("correct");
+          currentMCQScore++;
+          $("#quiz-live-score").text(currentMCQScore);
+        } else {
+          btn.classList.add("incorrect");
+          if (!currentIncorrectTopics.includes(q.topic)) {
+            currentIncorrectTopics.push(q.topic);
+          }
+          // Highlight the right option
+          allBtns.forEach(function (b) {
+            if (b.textContent.trim().charAt(0).toUpperCase() === q.answer.toUpperCase()) {
+              b.classList.add("correct");
+            }
+          });
+        }
+
+        // Show Explanation
+        $("#quiz-exp-content").text(q.explanation || "No explanation provided.");
+        $("#quiz-explanation-box").fadeIn(150);
+
+        // Next Button
+        if (currentMCQIndex < currentMCQList.length - 1) {
+          $("#btn-next-quiz-q").html('Next Question <i class="bi bi-arrow-right"></i>').show();
+        } else {
+          $("#btn-next-quiz-q").html('Complete Quiz <i class="bi bi-check-circle"></i>').show();
+        }
+      });
+
+      optionsContainer.appendChild(btn);
+    });
+  }
+
+  $("#btn-next-quiz-q").click(function () {
+    currentMCQIndex++;
+    renderCurrentMCQ();
+  });
+
+  async function finishMCQQuiz() {
+    $("#mcq-quiz-active-container").hide();
+    $("#mcq-quiz-result-container").fadeIn(200);
+
+    var total = currentMCQList.length;
+    var pct = Math.round((currentMCQScore / total) * 100);
+
+    $("#result-final-pct").text(pct + "%");
+    $("#result-final-fraction").text(currentMCQScore + " / " + total + " Correct");
+
+    if (currentIncorrectTopics.length > 0) {
+      $("#result-weak-topics-list").text(currentIncorrectTopics.join(", "));
+      $("#result-weak-alert").show();
+    } else {
+      $("#result-weak-alert").hide();
+    }
+
+    // Record into SQLite
+    if (typeof eel !== "undefined" && eel.recordQuizResult) {
+      await eel.recordQuizResult(studyActiveSubject, "MCQ Mini Quiz", currentMCQScore, total, currentIncorrectTopics)();
+      await loadStudyStats();
+    }
+  }
+
+  $("#btn-retake-quiz").click(function () {
+    startMCQQuiz();
+  });
+
+  $("#btn-review-weak-quiz").click(function () {
+    $('.study-tab-btn[data-tab="weak"]').click();
+  });
+
+  // 3. Viva Voce Session
+  async function loadVivaSession() {
+    if (typeof eel !== "undefined" && eel.getVivaQuestions) {
+      var data = await eel.getVivaQuestions(studyActiveSubject, 5)();
+      if (data && data.questions && data.questions.length > 0) {
+        currentVivaList = data.questions;
+        currentVivaIndex = 0;
+        renderVivaQuestion();
+      }
+    }
+  }
+
+  function renderVivaQuestion() {
+    if (currentVivaIndex >= currentVivaList.length) currentVivaIndex = 0;
+    var v = currentVivaList[currentVivaIndex];
+    $("#viva-topic-badge").text(v.topic || studyActiveSubject);
+    $("#viva-question-text").text(v.question);
+    $("#viva-answer-text").text(v.answer);
+    $("#viva-model-answer-box").hide();
+  }
+
+  $("#btn-reveal-viva-answer").click(function () {
+    $("#viva-model-answer-box").slideToggle(150);
+  });
+
+  $("#btn-refresh-viva").click(function () {
+    currentVivaIndex++;
+    renderVivaQuestion();
+  });
+
+  $("#btn-viva-strong").click(function () {
+    alert("Great job! Marked as Mastered.");
+    currentVivaIndex++;
+    renderVivaQuestion();
+  });
+
+  $("#btn-viva-weak").click(async function () {
+    var v = currentVivaList[currentVivaIndex];
+    if (v && v.topic && typeof eel !== "undefined" && eel.recordQuizResult) {
+      await eel.recordQuizResult(studyActiveSubject, v.topic, 0, 1, [v.topic])();
+      await loadStudyStats();
+      alert("Flagged '" + v.topic + "' for weak-topic revision.");
+    }
+    currentVivaIndex++;
+    renderVivaQuestion();
+  });
+
+  // 4. Exam Questions Loader
+  async function loadExamQuestions(filterType) {
+    if (typeof eel === "undefined" || !eel.getExamQuestions) return;
+    try {
+      var data = await eel.getExamQuestions(studyActiveSubject)();
+      if (!data) return;
+
+      var container = document.getElementById("exam-questions-list");
+      container.innerHTML = "";
+
+      var type = filterType || "all";
+      var shortQs = data.short_questions || [];
+      var longQs = data.long_questions || [];
+
+      var toRender = [];
+      if (type === "all" || type === "short") {
+        shortQs.forEach(function (q) { toRender.push({ q: q, type: "short" }); });
+      }
+      if (type === "all" || type === "long") {
+        longQs.forEach(function (q) { toRender.push({ q: q, type: "long" }); });
+      }
+
+      if (toRender.length === 0) {
+        container.innerHTML = '<div class="text-muted small py-3 text-center">No exam questions for this filter.</div>';
+        return;
+      }
+
+      toRender.forEach(function (item) {
+        var card = document.createElement("div");
+        card.className = "exam-question-card";
+        var isShort = item.type === "short";
+        var tagClass = isShort ? "marking-short" : "marking-long";
+        var tagText = isShort ? "Short (2-3 Marks)" : "Long (5-10 Marks)";
+
+        card.innerHTML = `
+          <div class="exam-q-header">
+            <span class="exam-marking-tag ${tagClass}">${tagText}</span>
+            <span class="text-muted small">${escapeHtml(studyActiveSubject)}</span>
+          </div>
+          <div class="exam-q-title">${escapeHtml(item.q.question)}</div>
+          <div class="exam-q-answer">${escapeHtml(item.q.answer)}</div>
+        `;
+        container.appendChild(card);
+      });
+    } catch (e) {
+      console.log("Error loading exam questions:", e);
+    }
+  }
+
+  $(".exam-filter-row .cat-tab").click(function () {
+    $(".exam-filter-row .cat-tab").removeClass("active");
+    $(this).addClass("active");
+    var filterType = $(this).data("exam-type");
+    loadExamQuestions(filterType);
+  });
+
+  // 5. Flashcards Loader
+  async function loadFlashcards() {
+    if (typeof eel === "undefined" || !eel.getStudyFlashcards) return;
+    try {
+      var data = await eel.getStudyFlashcards(studyActiveSubject)();
+      if (data && data.flashcards && data.flashcards.length > 0) {
+        currentFlashcards = data.flashcards;
+        currentFCIndex = 0;
+        renderCurrentFlashcard();
+      }
+    } catch (e) {
+      console.log("Error loading flashcards:", e);
+    }
+  }
+
+  function renderCurrentFlashcard() {
+    if (currentFlashcards.length === 0) return;
+    if (currentFCIndex < 0) currentFCIndex = 0;
+    if (currentFCIndex >= currentFlashcards.length) currentFCIndex = currentFlashcards.length - 1;
+
+    var card = currentFlashcards[currentFCIndex];
+    $("#study-flashcard").removeClass("flipped");
+    $("#fc-counter").text("Card " + (currentFCIndex + 1) + " of " + currentFlashcards.length);
+    $("#fc-front-text").text(card.front);
+    $("#fc-back-text").text(card.back);
+  }
+
+  $("#study-flashcard, #btn-fc-flip").click(function () {
+    $("#study-flashcard").toggleClass("flipped");
+  });
+
+  $("#btn-fc-prev").click(function () {
+    if (currentFCIndex > 0) {
+      currentFCIndex--;
+      renderCurrentFlashcard();
+    }
+  });
+
+  $("#btn-fc-next").click(function () {
+    if (currentFCIndex < currentFlashcards.length - 1) {
+      currentFCIndex++;
+      renderCurrentFlashcard();
+    }
+  });
+
+  // 6. Weak Topics Loader
+  async function loadWeakTopicsTab() {
+    if (typeof eel === "undefined" || !eel.getWeakTopics) return;
+    try {
+      var weak = await eel.getWeakTopics()();
+      var container = document.getElementById("weak-topics-list");
+      container.innerHTML = "";
+
+      if (!weak || weak.length === 0) {
+        container.innerHTML = `
+          <div class="col-12 text-center py-4 text-muted">
+            <i class="bi bi-shield-check" style="font-size: 2.5rem; color: #2ed573;"></i>
+            <h6 class="text-white mt-2 mb-1">No Weak Topics Flagged!</h6>
+            <p class="small">Great mastery! Incorrect quiz answers will automatically appear here for revision.</p>
+          </div>
+        `;
+        return;
+      }
+
+      weak.forEach(function (w) {
+        var card = document.createElement("div");
+        card.className = "weak-topic-card";
+        card.innerHTML = `
+          <div class="weak-topic-title">${escapeHtml(w.topic)}</div>
+          <div class="weak-topic-meta">
+            <span><i class="bi bi-book"></i> ${escapeHtml(w.subject)}</span>
+            <span class="weak-err-badge">${w.error_count} Errors</span>
+          </div>
+        `;
+        card.addEventListener("click", function () {
+          // Switch to explainer for this topic
+          studyActiveSubject = w.subject;
+          $("#study-subject-select").val(studyActiveSubject);
+          $('.study-tab-btn[data-tab="concept"]').click();
+          loadConceptExplainer(w.topic);
+        });
+        container.appendChild(card);
+      });
+    } catch (e) {
+      console.log("Error loading weak topics:", e);
+    }
+  }
+
+  $("#btn-start-weak-revision").click(function () {
+    $('.study-tab-btn[data-tab="concept"]').click();
+    loadConceptExplainer();
+  });
+
+  // Tab Switching
+  $(".study-tab-btn").click(function () {
+    $(".study-tab-btn").removeClass("active");
+    $(this).addClass("active");
+    var tab = $(this).data("tab");
+    studyCurrentTab = tab;
+
+    $(".study-tab-pane").removeClass("active");
+    $("#study-tab-" + tab).addClass("active");
+
+    if (tab === "concept") {
+      loadConceptExplainer();
+    } else if (tab === "mcq") {
+      startMCQQuiz();
+    } else if (tab === "viva") {
+      loadVivaSession();
+    } else if (tab === "exam") {
+      loadExamQuestions();
+    } else if (tab === "flashcards") {
+      loadFlashcards();
+    } else if (tab === "weak") {
+      loadWeakTopicsTab();
+    }
+  });
+
+  // Explainer Format Switching
+  $(".btn-exp-format").click(function () {
+    $(".btn-exp-format").removeClass("active");
+    $(this).addClass("active");
+    studyCurrentFormat = $(this).data("fmt");
+    loadConceptExplainer();
+  });
+
+  // Search in Concept Explainer
+  var studySearchTimer = null;
+  $("#study-concept-search").on("input", function () {
+    clearTimeout(studySearchTimer);
+    var q = $(this).val();
+    studySearchTimer = setTimeout(function () {
+      if (q && q.trim().length > 1) {
+        loadConceptExplainer(q.trim());
+      }
+    }, 300);
+  });
+
+  // Subject Dropdown Change
+  $("#study-subject-select").change(async function () {
+    studyActiveSubject = $(this).val();
+    if (typeof eel !== "undefined" && eel.setStudySubject) {
+      await eel.setStudySubject(studyActiveSubject)();
+    }
+    renderQuickTopicChips();
+    await loadStudyStats();
+
+    // Reload active tab
+    $('.study-tab-btn[data-tab="' + studyCurrentTab + '"]').click();
+  });
+
+  // Toggle Study Mode Power Active/Inactive
+  $("#btn-toggle-study-active").click(async function () {
+    if (typeof eel === "undefined") return;
+    if (isStudyModeActiveState) {
+      await eel.stopStudyMode()();
+    } else {
+      await eel.startStudyMode(studyActiveSubject)();
+    }
+    await loadStudyStats();
+  });
+
+  // Speak Buttons
+  $("#btn-speak-concept").click(function () {
+    var title = $("#concept-title").text();
+    var text = $("#concept-simple-text").text();
+    if (typeof eel !== "undefined" && eel.takeAllCommands) {
+      eel.takeAllCommands("Explain " + title + " simply")();
+    }
+  });
+
+  $("#btn-speak-viva").click(function () {
+    var q = $("#viva-question-text").text();
+    if (typeof eel !== "undefined" && eel.takeAllCommands) {
+      eel.takeAllCommands("Take my viva")();
+    }
+  });
+
+  // Open & Close Study Mode Modal
+  $("#btn-open-study-mode").click(function () {
+    $("#study-mode-modal").fadeIn(200);
+    renderQuickTopicChips();
+    loadStudyStats();
+    loadConceptExplainer();
+  });
+
+  $("#study-mode-close, #study-mode-done-btn").click(function () {
+    $("#study-mode-modal").fadeOut(150);
+  });
+
+  // Eel Global Expose Callbacks
+  window.openStudyModeModal = function () {
+    $("#btn-open-study-mode").click();
+  };
+
+  window.openStudyQuizTab = function () {
+    $("#study-mode-modal").fadeIn(200);
+    renderQuickTopicChips();
+    loadStudyStats();
+    $('.study-tab-btn[data-tab="mcq"]').click();
+  };
+
+  window.openStudyVivaTab = function () {
+    $("#study-mode-modal").fadeIn(200);
+    renderQuickTopicChips();
+    loadStudyStats();
+    $('.study-tab-btn[data-tab="viva"]').click();
+  };
+
+  window.openStudyConceptTab = function () {
+    $("#study-mode-modal").fadeIn(200);
+    renderQuickTopicChips();
+    loadStudyStats();
+    $('.study-tab-btn[data-tab="concept"]').click();
+  };
+
+  if (typeof eel !== "undefined") {
+    eel.expose(openStudyModeModal, "openStudyModeModal");
+    eel.expose(openStudyQuizTab, "openStudyQuizTab");
+    eel.expose(openStudyVivaTab, "openStudyVivaTab");
+    eel.expose(openStudyConceptTab, "openStudyConceptTab");
+  }
+
+  // Initial Study Stats
+  loadStudyStats();
+
+
 
 
   // -------------------------------------------------------------

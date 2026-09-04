@@ -65,13 +65,22 @@
 - **Rich Goal Attributes**: Goal Name, Description, Target Deadline (with days remaining countdown), Priority levels (*High, Medium, Low*), Milestones Checklist, Auto-Calculated Progress Percentage (0–100%), Status (*Active, Completed, On Hold*), and Strategy Notes.
 - **AI Daily Action Planner**: Generates a tailored daily action plan with estimated time blocks (30–45 mins each) prioritized from active goals and upcoming deadlines.
 - **Milestone-Driven Progress Engine**: Interactive milestone checkboxes automatically update progress percentage and flip status to Completed upon reaching 100%.
-- **Natural Voice Interaction**:
-  - *"What should I work on today?"* &rarr; Spoken daily action plan with top priority tasks.
-  - *"Show my goals."* &rarr; Spoken summary of active goals and opens Goals Dashboard.
-  - *"Which goal is closest to completion?"* &rarr; Identifies goal nearest 100%.
-  - *"Update progress of Jarvis project to 85%"* &rarr; Updates goal progress via voice.
-  - *"Create a new goal."* &rarr; Opens Goal Creator modal.
-- **Interactive UI Dashboard**: Dedicated modal with stats bar (Active goals, Completed goals, Avg progress %, Closest goal), category filter tabs, search filter, and animated progress bars.
+
+### 🎓 10. AI Study Mode & Academic Coach
+- **Multi-Subject Curriculum Bank**: Pre-loaded with high-yield concepts across *Computer Networks, Operating Systems, Database Management Systems (DBMS), Data Structures & Algorithms (DSA), AI & Machine Learning, and Python OOPs*.
+- **Multi-Format Concept Explainer**: Switch instantly between *Simple Explanations, Hinglish, Step-by-Step Breakdowns, Real-World Analogies, and Key Takeaways*.
+- **Interactive MCQ & Mini-Quiz Engine**: Real-time option evaluation (A/B/C/D), instantaneous answer validation, detailed explanations, automatic scoring, and weak-topic logging.
+- **Viva Voce Oral Examiner**: Real-time interview and oral viva practice with question prompts, listen audio, model answer inspection, and performance self-evaluations.
+- **University & Placement Exam Master**: Structured Short-Answer (2–3 marks) and Long-Answer (5–10 marks) questions with comprehensive marking schemes.
+- **3D Interactive Flashcards**: Rapid revision flashcard decks with smooth 3D flip card animations.
+- **Automatic Scoring & Weak-Topic Detection**: Automatically analyzes quiz accuracy, logs incorrect questions into SQLite (`weak_topics`), and prioritizes weak topics for personalized revision sessions (*"Revise today's topics"*).
+- **Study Voice Commands**:
+  - *"Start study mode."* / *"Study mode on"* &rarr; Activates study mode and opens dashboard.
+  - *"Explain this simply."* / *"Explain Deadlocks simply"* &rarr; Spoken simple explanation with real-world analogy.
+  - *"Give me 10 MCQs."* / *"Test me on networking"* &rarr; Loads MCQs and reads first practice question.
+  - *"Take my viva."* &rarr; Initiates oral viva session and asks interview question.
+  - *"Show my weak topics."* &rarr; Spoken summary of flagged topics needing revision.
+  - *"Revise today's topics."* &rarr; Initiates personalized revision on highest-error weak topic.
 
 ---
 
@@ -94,6 +103,7 @@ Jarvis/
 │   ├── goals_manager.py                          # Personal Goal & Progress Tracking + Daily Action Planner
 │   ├── helper.py                                 # String processing and regex helpers
 │   ├── memory_manager.py                         # Secure Categorized Long-Term Memory Vault
+│   ├── study_manager.py                          # AI Study Mode, MCQs, Viva, Exam Q&A & Weak-Topic Detector
 │   └── user_profile.json                         # Permanent user profile data
 ├── frontend/
 │   ├── assets/
@@ -185,6 +195,12 @@ python main.py
 | **Goal Progress** | *"Which goal is closest to completion?"* | Identifies closest goal and current progress % |
 | **Update Progress** | *"Update progress of Jarvis project to 85%"* | Updates goal progress percentage via voice |
 | **Create New Goal** | *"Create a new goal"* / *"Naya goal banao"* | Opens Goal Creation modal in UI |
+| **Study Mode Toggle** | *"Start study mode"* / *"Study mode on"* | Activates AI Study Mode and launches academic coach |
+| **Simple Explanations**| *"Explain Deadlocks simply"* | Explains complex concept with simple real-world analogy |
+| **MCQ Practice** | *"Give me 10 MCQs"* / *"Test me on networking"* | Loads interactive MCQs and reads first practice question |
+| **Oral Viva Examination**| *"Take my viva"* / *"Viva question"* | Conducts interactive interview & reveals model response |
+| **Weak-Topic Analytics**| *"Show my weak topics"* | Summarizes flagged weak topics from quizzes |
+| **Personalized Revision**| *"Revise today's topics"* | Starts targeted revision on highest-error weak topic |
 | **Personal Profile** | *"Mera naam kya hai?"* / *"Who am I?"* | Answers: *"Aapka naam Samendra Bankar hai."* |
 | **Profile & Tech** | *"Meri education kya hai?"* / *"Mere skills batao"* | Details BTech background, Python, Java, AI/ML, etc. |
 | **Knowledge & Search**| *"Who is the Prime Minister of India?"* | Searches Google & speaks verified answer |
