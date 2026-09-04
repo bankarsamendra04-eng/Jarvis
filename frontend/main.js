@@ -48,20 +48,30 @@ $(document).ready(function () {
   }
 
   // -------------------------------------------------------------
-  // Load Initial Conversation & History
+  // Load Initial Conversation & History (Always Fresh on Startup)
   // -------------------------------------------------------------
   async function initializeConversationState() {
     try {
-      if (typeof eel !== "undefined" && eel.getActiveConversationId) {
-        activeConversationId = await eel.getActiveConversationId()();
+      if (typeof eel !== "undefined" && eel.startNewSessionConversation) {
+        var res = await eel.startNewSessionConversation()();
+        if (res && res.id) {
+          activeConversationId = res.id;
+        }
+      } else if (typeof eel !== "undefined" && eel.createConversation) {
+        var res = await eel.createConversation("New Conversation")();
+        if (res && res.id) {
+          activeConversationId = res.id;
+        }
       }
     } catch (e) {
-      console.log("Error getting active conv ID:", e);
+      console.log("Error initializing new session conversation:", e);
     }
+
+    $("#active-conv-title").text("New Conversation");
+    $("#chat-canvas-body").html("");
+    $("#Oval").attr("hidden", false);
+
     await loadConversations();
-    if (activeConversationId) {
-      loadConversationMessages(activeConversationId);
-    }
   }
 
   initializeConversationState();

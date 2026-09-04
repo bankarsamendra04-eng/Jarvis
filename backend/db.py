@@ -99,14 +99,64 @@ init_db()
 # Conversation Management & CRUD APIs
 # -------------------------------------------------------------
 
+def init_session_new_conversation():
+    """
+    Always initializes a clean, fresh conversation for a newly started session.
+    Reuses an empty 'New Conversation' (0 messages) if present, or creates a fresh one.
+    """
+    global CURRENT_ACTIVE_CONV_ID
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("""
+            SELECT c.id FROM conversations c
+            WHERE (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id) = 0
+            ORDER BY c.created_at DESC LIMIT 1
+        """)
+        row = c.fetchone()
+        conn.close()
+        if row:
+            CURRENT_ACTIVE_CONV_ID = row[0]
+            try:
+                from backend.context_manager import get_context_manager
+                get_context_manager().set_active_conversation(CURRENT_ACTIVE_CONV_ID)
+                get_context_manager().reset_context()
+            except Exception:
+                pass
+            return {
+                "status": "success",
+                "id": CURRENT_ACTIVE_CONV_ID,
+                "title": "New Conversation",
+                "is_new": True
+            }
+    except Exception as e:
+        print(f"Error checking existing empty conversation: {e}")
+
+    new_conv = create_conversation("New Conversation")
+    CURRENT_ACTIVE_CONV_ID = new_conv["id"]
+    try:
+        from backend.context_manager import get_context_manager
+        get_context_manager().set_active_conversation(CURRENT_ACTIVE_CONV_ID)
+        get_context_manager().reset_context()
+    except Exception:
+        pass
+    new_conv["is_new"] = True
+    return new_conv
+
+
+@eel.expose
+def startNewSessionConversation():
+    """Exposed endpoint to ensure the frontend always boots into a brand-new conversation."""
+    return init_session_new_conversation()
+
+
 def get_or_create_active_conversation():
     """
-    Returns the currently active conversation ID. If none is active,
-    picks the newest existing conversation or creates a new one.
+    Returns the currently active conversation ID. If none is set,
+    initiates a fresh session conversation.
     """
     global CURRENT_ACTIVE_CONV_ID
     if CURRENT_ACTIVE_CONV_ID:
-        # Verify it still exists
         try:
             conn = sqlite3.connect(DB_PATH)
             c = conn.cursor()
@@ -118,22 +168,8 @@ def get_or_create_active_conversation():
         except Exception:
             pass
 
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("SELECT id FROM conversations ORDER BY is_pinned DESC, updated_at DESC LIMIT 1")
-        row = c.fetchone()
-        conn.close()
-        if row:
-            CURRENT_ACTIVE_CONV_ID = row[0]
-            return CURRENT_ACTIVE_CONV_ID
-    except Exception as e:
-        print(f"Error getting active conversation: {e}")
-
-    # Create fresh conversation
-    new_conv = create_conversation("New Conversation")
-    CURRENT_ACTIVE_CONV_ID = new_conv["id"]
-    return CURRENT_ACTIVE_CONV_ID
+    conv = init_session_new_conversation()
+    return conv["id"]
 
 
 @eel.expose
