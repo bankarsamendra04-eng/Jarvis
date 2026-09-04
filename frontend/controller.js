@@ -77,14 +77,12 @@ $(document).ready(function () {
   function receiverText(message, timestamp) {
     if (!message || message.trim() === "") return;
 
-    $("#Start").attr("hidden", true);
-
     var chatBox = document.getElementById("chat-canvas-body");
     var timeStr = timestamp || formatCurrentTime();
     var formattedMsg = renderRichMessageHtml(message);
 
     var msgHtml = `
-      <div class="message-row assistant-row">
+      <div class="message-row assistant-row animate__animated animate__fadeIn">
         <div class="message-bubble assistant-bubble">
           <div class="message-content">${formattedMsg}</div>
           <div class="message-meta">
@@ -98,41 +96,38 @@ $(document).ready(function () {
     scrollToBottom();
   }
 
+  // -------------------------------------------------------------
+  // Markdown & Code Renderer
+  // -------------------------------------------------------------
   function renderRichMessageHtml(text) {
     if (!text) return "";
     var escaped = escapeHtml(text);
-
-    // Code blocks ```lang\ncode\n```
-    escaped = escaped.replace(/```(?:[a-zA-Z0-9_\-]+)?\n?([\s\S]*?)```/g, function(match, code) {
-      return '<pre class="chat-code-block"><code>' + code + '</code></pre>';
-    });
-
-    // Inline code `code`
+    escaped = escaped.replace(/```(?:[a-zA-Z0-9_\-]+)?\n?([\s\S]*?)```/g, '<pre class="chat-code-block"><code>$1</code></pre>');
     escaped = escaped.replace(/`([^`]+)`/g, '<code class="chat-inline-code">$1</code>');
-
-    // Headers
-    escaped = escaped.replace(/^### (.*$)/gim, '<div class="chat-header-h3">$1</div>');
-    escaped = escaped.replace(/^## (.*$)/gim, '<div class="chat-header-h2">$1</div>');
-    escaped = escaped.replace(/^# (.*$)/gim, '<div class="chat-header-h1">$1</div>');
-
-    // Bold **text**
     escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // Horizontal rules
-    escaped = escaped.replace(/^---$/gim, '<hr class="chat-hr"/>');
-
-    // List items
-    escaped = escaped.replace(/^- (.*$)/gim, '<div class="chat-list-bullet">&bull; $1</div>');
-
-    // Newlines to <br/> outside pre blocks
-    var parts = escaped.split(/(<pre[\s\S]*?<\/pre>)/g);
-    for (var i = 0; i < parts.length; i++) {
-      if (!parts[i].startsWith('<pre')) {
-        parts[i] = parts[i].replace(/\n/g, '<br/>');
-      }
-    }
-    return parts.join('');
+    escaped = escaped.replace(/\n/g, '<br/>');
+    return escaped;
   }
+
+  // -------------------------------------------------------------
+  // Copy & Download Code Handlers
+  // -------------------------------------------------------------
+  $(document).on("click", ".btn-copy-code", function () {
+    var targetId = $(this).data("target");
+    var codeEl = document.getElementById(targetId);
+    if (!codeEl) return;
+    var textToCopy = codeEl.innerText || codeEl.textContent;
+    var btn = $(this);
+
+    navigator.clipboard.writeText(textToCopy).then(function () {
+      btn.html('<i class="bi bi-check2 text-success"></i> Copied!');
+      setTimeout(function () {
+        btn.html('<i class="bi bi-clipboard"></i> Copy');
+      }, 2000);
+    }).catch(function () {
+      btn.text("Failed");
+    });
+  });
 
   // -------------------------------------------------------------
   // Real-time Conversation Refresh Hook (called by backend)
@@ -169,8 +164,13 @@ $(document).ready(function () {
   function hideStart() {
     $("#Start").attr("hidden", true);
     setTimeout(function () {
-      $("#Oval").addClass("animate__animated animate__zoomIn");
-      $("#Oval").attr("hidden", false);
+      var chatBox = document.getElementById("chat-canvas-body");
+      if (!chatBox || chatBox.children.length === 0) {
+        $("#Oval").addClass("animate__animated animate__zoomIn");
+        $("#Oval").attr("hidden", false);
+      } else {
+        $("#Oval").attr("hidden", true);
+      }
     }, 400);
   }
 

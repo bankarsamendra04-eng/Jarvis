@@ -68,9 +68,6 @@ $(document).ready(function () {
     }
 
     $("#active-conv-title").text("New Conversation");
-    $("#chat-canvas-body").html("");
-    $("#Oval").attr("hidden", false);
-
     await loadConversations();
   }
 
