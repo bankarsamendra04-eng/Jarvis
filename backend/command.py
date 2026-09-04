@@ -201,6 +201,27 @@ def takeAllCommands(message=None):
             is_priority = any(w in query_lower for w in ["remember", "yaad rakh", "yaad karo", "save to memory", "save this to my memory"])
             store_message_log("user", query, is_priority_memory=is_priority)
 
+            # Update Context & Check Ambiguity
+            from backend.context_manager import get_context_manager
+            cm = get_context_manager()
+            cm.update_from_user_query(query)
+
+            is_ambiguous, clarif_text = cm.check_ambiguity(query)
+            if is_ambiguous and clarif_text:
+                speak(clarif_text)
+                try:
+                    eel.ShowHood()
+                except Exception:
+                    pass
+                return
+
+            resolved_query, applied = cm.resolve_references(query)
+            if applied:
+                print(f"[Context Engine] Resolved '{query}' -> '{resolved_query}' (Context: {applied})")
+            
+            exec_query = resolved_query
+            query_lower = exec_query.lower().strip()
+
             # 1. Memory Commands
             if any(w in query_lower for w in ["remember", "save to memory", "save this to my memory", "yaad rakh", "yaad karo"]):
                 from backend.feature import rememberMemory
@@ -296,7 +317,7 @@ def takeAllCommands(message=None):
 
                 # Process via Master Intent & Knowledge Engine
                 from backend.intent_engine import process_user_query_with_intent
-                display_content, spoken_text = process_user_query_with_intent(query)
+                display_content, spoken_text = process_user_query_with_intent(exec_query)
                 print(f"Jarvis Spoken: {spoken_text}")
                 speak(spoken_text, display_text=display_content)
         else:
@@ -309,3 +330,16 @@ def takeAllCommands(message=None):
         eel.ShowHood()
     except Exception:
         pass
+
+
+@eel.expose
+def getActiveConversationContext():
+    from backend.context_manager import get_context_manager
+    return get_context_manager().get_context()
+
+
+@eel.expose
+def resetConversationContext():
+    from backend.context_manager import get_context_manager
+    get_context_manager().reset_context()
+    return {"status": "success"}

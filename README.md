@@ -90,6 +90,18 @@
 - **Complete Tested Code & Complexity Analysis**: Generates complete runnable code with time/space complexity analysis and execution commands.
 - **Dual Screen & Voice Delivery**: Decouples rich full-text markdown output on the GUI chat display from concise, punchy natural voice summaries spoken over TTS.
 
+### 🧠 12. Context-Aware Conversation Management & Reference Resolution
+- **Short-Term Context Memory**: Maintains active state for Current Project, Previous Project, Current Task, Current Topic, Recent Files, Recent Commands, Recent Errors, and Last Generated Code Snippets.
+- **Implicit Context Understanding**: E.g., *"I'm building a quiz app"* &rarr; *"Create the JavaScript file"* &rarr; Jarvis automatically synthesizes the task and generates complete `script.js` with question bank, scoring, and UI listeners.
+- **Deictic & Anaphoric Pronoun Resolution**: Intelligently resolves references:
+  - *"this"*, *"that"*, *"it"*
+  - *"the previous project"*, *"my previous project"*
+  - *"the last file"*, *"that file"*, *"this file"*
+  - *"that code"*, *"this code"*, *"the code"*
+  - *"the above error"*, *"this error"*, *"that error"*
+  - *"my current project"*, *"this project"*
+- **Ambiguity Detection & Targeted Clarifications**: Rather than blindly guessing when multiple candidates exist, asks concise, targeted clarifying questions (e.g., *"Are you referring to script.js or style.css for the Quiz App?"*).
+
 ---
 
 ## 📁 Project Structure
@@ -106,6 +118,7 @@ Jarvis/
 │   │       └── trainer.yml                       # Trained biometric weights
 │   ├── command.py                                # TTS (Indian Voice), STT & command routing
 │   ├── config.py                                 # Voice, user profile & assistant configuration
+│   ├── context_manager.py                        # Context-Aware Conversation & Reference Engine
 │   ├── db.py                                     # SQLite DB (conversations, messages, logs, commands)
 │   ├── feature.py                                # Universal file opener, Q&A, WhatsApp & YouTube features
 │   ├── goals_manager.py                          # Personal Goal & Progress Tracking + Daily Action Planner

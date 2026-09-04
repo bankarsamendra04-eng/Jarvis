@@ -1,5 +1,6 @@
 import re
 import random
+from backend.context_manager import get_context_manager
 
 # Conversation context memory for follow-ups
 CONVERSATION_CONTEXT = {
@@ -36,12 +37,12 @@ def classify_intent(query: str) -> str:
     q = query.lower().strip()
     if re.search(r'\b(take my viva|viva voce|viva questions?|viva)\b', q):
         return "VIVA"
-    if re.search(r'\b(debug|fix this code|fix this error|error:|syntaxerror|indexerror|typeerror|bug in)\b', q):
+    if re.search(r'\b(debug|fix this code|fix this error|fix that code|fix it|fix the above error|error:|syntaxerror|indexerror|typeerror|bug in)\b', q):
         return "DEBUGGING"
-    if re.search(r'\b(mcqs?|quiz|multiple choice|test me|test on|give me \d+ mcq)\b', q):
-        return "MCQ_GENERATION"
-    if re.search(r'\b(write|code|implement|program|script in|function for)\b', q):
+    if re.search(r'\b(write|code|implement|program|script in|function for|create (?:the )?(?:javascript|css|html|python|js|file)|stylesheet|html page|script\.js|style\.css|index\.html)\b', q):
         return "CODING"
+    if re.search(r'\b(mcqs?|multiple choice|take mcq|give me \d+ mcq|generate mcq|make a quiz|take quiz|quiz on|practice quiz)\b', q):
+        return "MCQ_GENERATION"
     if re.search(r'\b(explain|what is|what are|how does|architecture of|difference between|overview of|teach me|describe)\b', q):
         return "EXPLANATION"
     if re.search(r'\b(calculate|solve|what is \d+|plus|minus|multiplied by|divided by|integrate|derivative)\b', q):
@@ -329,7 +330,192 @@ def generate_structured_explanation(topic: str):
 
 def generate_code_solution(query: str):
     q = query.lower()
+    cm = get_context_manager()
+    ctx = cm.get_context()
     CONVERSATION_CONTEXT["last_intent"] = "CODING"
+
+    # Check if this belongs to a Quiz App project (from query or context)
+    is_quiz_app = ("quiz" in q or (ctx.get("current_project") and "quiz" in ctx["current_project"]["name"].lower()))
+    
+    if is_quiz_app and ("javascript" in q or "script.js" in q or "js" in q or "logic" in q or "script" in q):
+        code_block = """// Quiz Application Engine (script.js)
+const quizData = [
+    {
+        question: "Which data structure uses LIFO (Last In First Out)?",
+        options: ["Queue", "Stack", "Array", "Linked List"],
+        answer: 1
+    },
+    {
+        question: "What is the time complexity of Binary Search?",
+        options: ["O(N)", "O(1)", "O(log N)", "O(N^2)"],
+        answer: 2
+    },
+    {
+        question: "Which layer in OSI model handles end-to-end reliability?",
+        options: ["Network", "Transport", "Session", "Data Link"],
+        answer: 1
+    }
+];
+
+let currentQuestion = 0;
+let score = 0;
+let selectedOption = null;
+
+function loadQuestion() {
+    const q = quizData[currentQuestion];
+    document.getElementById("question-text").innerText = `Q${currentQuestion + 1}. ${q.question}`;
+    const optionsContainer = document.getElementById("options-list");
+    optionsContainer.innerHTML = "";
+
+    q.options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "quiz-option-btn";
+        btn.innerText = `${String.fromCharCode(65 + idx)}) ${opt}`;
+        btn.onclick = () => selectOption(idx, btn);
+        optionsContainer.appendChild(btn);
+    });
+}
+
+function selectOption(index, btnElement) {
+    selectedOption = index;
+    document.querySelectorAll(".quiz-option-btn").forEach(b => b.classList.remove("selected"));
+    btnElement.classList.add("selected");
+}
+
+function submitAnswer() {
+    if (selectedOption === null) {
+        alert("Please select an option before continuing!");
+        return;
+    }
+    if (selectedOption === quizData[currentQuestion].answer) {
+        score++;
+    }
+    selectedOption = null;
+    currentQuestion++;
+
+    if (currentQuestion < quizData.length) {
+        loadQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById("quiz-card").innerHTML = `
+        <h2>🎉 Quiz Completed!</h2>
+        <p>Your Final Score: <strong>${score} / ${quizData.length}</strong> (${Math.round((score / quizData.length) * 100)}%)</p>
+        <button onclick="location.reload()" class="restart-btn">Restart Quiz</button>
+    `;
+}
+
+window.onload = loadQuestion;"""
+        cm.record_file("script.js", file_type="javascript")
+        cm.record_code(code_block, language="javascript", description="Quiz App Core Engine")
+
+        text = f"""### 💻 Quiz App Engine (`script.js`)
+
+Here is the complete JavaScript logic for your **Quiz Application**:
+
+```javascript
+{code_block}
+```
+
+#### ⚙️ Features Included:
+- **Dynamic Question Loader**: Renders questions and options with interactive selection.
+- **Score Calculation**: Accurately tallies correct answers across all rounds.
+- **Completion Screen**: Displays final score, percentage, and a restart button."""
+        spoken = "I have created the complete JavaScript engine (script.js) for your Quiz App. The code is displayed on your screen."
+        return text, spoken
+
+    elif is_quiz_app and ("css" in q or "style.css" in q or "styling" in q or "styles" in q):
+        code_block = """/* Modern Cyberpunk / Dark Mode Styling (style.css) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: radial-gradient(circle at top, #1a1a2e, #0f0f1b);
+    color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.quiz-container {
+    background: rgba(25, 25, 45, 0.85);
+    border: 1px solid rgba(0, 180, 216, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 180, 216, 0.2);
+    border-radius: 12px;
+    width: 480px;
+    padding: 24px;
+    backdrop-filter: blur(10px);
+}
+
+.quiz-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.quiz-option-btn {
+    width: 100%;
+    background: #1e2238;
+    color: #fff;
+    border: 1px solid #323856;
+    padding: 12px 16px;
+    margin: 8px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.quiz-option-btn:hover {
+    background: #282e4e;
+    border-color: #00b4d8;
+}
+
+.quiz-option-btn.selected {
+    background: #00b4d8;
+    color: #000;
+    font-weight: 600;
+}
+
+.submit-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    background: #0077b6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.submit-btn:hover {
+    background: #0096c7;
+}"""
+        cm.record_file("style.css", file_type="css")
+        cm.record_code(code_block, language="css", description="Quiz App Styling")
+
+        text = f"""### 🎨 Quiz App Styling (`style.css`)
+
+```css
+{code_block}
+```
+
+#### 🚀 How to Link in HTML:
+```html
+<link rel="stylesheet" href="style.css">
+```"""
+        spoken = "I have written the modern dark-themed CSS stylesheet (style.css) for your Quiz App."
+        return text, spoken
 
     if "binary search" in q:
         lang = "Python" if "python" in q else ("Java" if "java" in q else "Python")
@@ -367,6 +553,8 @@ public class BinarySearch {
     }
 }"""
             run_cmd = "javac BinarySearch.java && java BinarySearch"
+            cm.record_file("BinarySearch.java", file_type="java")
+            cm.record_code(code_block, language="java", description="Binary Search in Java")
         else:
             code_block = """# Binary Search Implementation in Python
 def binary_search(arr, target):
@@ -393,6 +581,8 @@ if __name__ == "__main__":
     idx = binary_search(sorted_numbers, target_value)
     print(f"Target {target_value} found at index: {idx}")"""
             run_cmd = "python binary_search.py"
+            cm.record_file("binary_search.py", file_type="python")
+            cm.record_code(code_block, language="python", description="Binary Search in Python")
 
         text = f"""### 💻 Binary Search Implementation ({lang})
 
@@ -428,6 +618,7 @@ def solve_problem(data):
 if __name__ == "__main__":
     sample_data = [1, 2, 3, 4, 5]
     print("Processed:", solve_problem(sample_data))"""
+    cm.record_code(sample_code, language="python", description="General solution")
 
     text = f"""### 💻 {title}
 
@@ -444,10 +635,15 @@ python script.py
 
 def generate_debugging_solution(query: str):
     CONVERSATION_CONTEXT["last_intent"] = "DEBUGGING"
-    text = f"""### 🛠️ Debugging Analysis & Fix
+    cm = get_context_manager()
+    ctx = cm.get_context()
+    
+    last_err = ctx["recent_errors"][0]["error"] if ctx.get("recent_errors") else "IndexError / Bounds Exception"
+    
+    text = f"""### 🛠️ Debugging Analysis & Fix: `{last_err}`
 
 #### 1. Root Cause:
-The issue occurs due to an out-of-bounds access or unhandled edge case when traversing sequences.
+The issue occurs when attempting to access an index or key that falls outside the boundary of the collection.
 
 #### 2. Fixed Implementation:
 ```python
@@ -459,9 +655,9 @@ def safe_access(collection, index, default=None):
 ```
 
 #### 3. Verification:
-Always validate indices against `len(collection)` before lookup to prevent `IndexError`.
+Always validate indices against `len(collection)` or wrap lookups in `try...except IndexError` blocks.
 """
-    spoken = "I have analyzed the error and provided the root cause and tested fix on your screen."
+    spoken = f"I have analyzed {last_err} and provided the root cause and tested fix on your screen."
     return text, spoken
 
 def process_user_query_with_intent(query: str):

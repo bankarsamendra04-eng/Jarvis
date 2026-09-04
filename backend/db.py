@@ -140,6 +140,11 @@ def get_or_create_active_conversation():
 def setActiveConversation(conversation_id):
     global CURRENT_ACTIVE_CONV_ID
     CURRENT_ACTIVE_CONV_ID = str(conversation_id)
+    try:
+        from backend.context_manager import get_context_manager
+        get_context_manager().set_active_conversation(CURRENT_ACTIVE_CONV_ID)
+    except Exception:
+        pass
     return {"status": "success", "active_id": CURRENT_ACTIVE_CONV_ID}
 
 
@@ -172,6 +177,11 @@ def create_conversation(title=None):
         conn.commit()
         conn.close()
         CURRENT_ACTIVE_CONV_ID = conv_id
+        try:
+            from backend.context_manager import get_context_manager
+            get_context_manager().set_active_conversation(CURRENT_ACTIVE_CONV_ID)
+        except Exception:
+            pass
         return {
             "status": "success",
             "id": conv_id,
