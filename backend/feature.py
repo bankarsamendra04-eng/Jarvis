@@ -373,27 +373,80 @@ def whatsApp(Phone, message, flag, name):
 
 
 def rememberMemory(query):
-    from backend.db import get_priority_memories
+    from backend.memory_manager import add_user_memory, check_security_guard, detect_memory_category
+
     # Clean up the memory text
-    content = query.lower().replace(ASSISTANT_NAME, "").replace("remember", "").replace("yaad", "").replace("rakho", "").replace("karo", "").strip()
-    if content.startswith("that "):
-        content = content[5:]
-    if not content:
-        speak("Ji Samendra, aap kya yaad rakhwana chahte hain?")
+    content = query.replace(ASSISTANT_NAME, "").replace("Jarvis", "")
+    content = re.sub(r'^(?:please\s+)?(?:remember\s+that|remember\s+this|remember|save\s+this\s+to\s+my\s+memory|save\s+to\s+my\s+memory|save\s+this|yaad\s+rakhna|yaad\s+rakho|yaad\s+karo)\s*(?::|that)?\s*', '', content, flags=re.IGNORECASE).strip()
+
+    if not content or len(content) < 3:
+        speak("Ji Samendra, aap memory mein kya save karwana chahte hain?")
         return
+
+    # Check security credentials guard
+    allowed, reason, threat = check_security_guard(content)
+    if not allowed:
+        speak(f"Security Alert: Suraksha ke kaaran main passwords, OTPs ya API keys memory mein store nahi karta.")
+        return
+
+    cat = detect_memory_category(content)
+    res = add_user_memory(cat, content, source="user_explicit")
     
-    speak(f"Got it! Maine yeh high-priority memory mein note kar liya hai.")
-
-
-def recallMemories():
-    from backend.db import get_priority_memories
-    memories = get_priority_memories()
-    if memories and len(memories) > 0:
-        recent_memories = [m['transcription'] for m in memories[-3:]]
-        summary = " Aur, ".join(recent_memories)
-        speak(f"Ji Samendra, mujhe yeh sab yaad hai: {summary}.")
+    if res.get("status") == "success":
+        if res.get("is_sensitive"):
+            speak(f"Maine yeh sensitive details aapki {cat} memory vault mein securely save kar li hain.")
+        else:
+            speak(f"Got it! Maine yeh aapki {cat} memory mein note kar liya hai.")
     else:
-        speak("Samendra, abhi tak aapne mujhe kuch yaad rakhne ke liye nahi kaha hai.")
+        speak("Memory save karne mein kuch dikkat aayi.")
+
+
+def forgetMemory(query):
+    from backend.memory_manager import forget_memory_by_topic
+
+    # Extract the topic to forget
+    cleaned = re.sub(r'^(?:please\s+)?(?:forget\s+this|forget\s+about|forget\s+memory\s+about|forget|delete\s+memory\s+about|delete\s+memory|bhool\s+jao)\s*', '', query, flags=re.IGNORECASE).strip(" ?.")
+    
+    if not cleaned or len(cleaned) < 2:
+        speak("Aap kaunsi memory delete ya forget karna chahte hain?")
+        return
+
+    success, count = forget_memory_by_topic(cleaned)
+    if success:
+        speak(f"Theek hai Samendra, maine {cleaned} se judi memory records ko delete kar diya hai.")
+    else:
+        speak(f"Mujhe {cleaned} se judi koi memory nahi mili.")
+
+
+def recallMemories(query=None):
+    from backend.memory_manager import get_all_memories, get_relevant_memories
+
+    if query and any(w in query.lower() for w in ["about", "kya", "regarding"]):
+        relevant = get_relevant_memories(query, limit=3)
+        if relevant:
+            items = [m['content'] for m in relevant]
+            speak(f"Aapki memory ke anusaar: {' '.join(items)}")
+            return
+
+    memories = get_all_memories()
+    if memories and len(memories) > 0:
+        # Group summary
+        profile_mems = [m['content'] for m in memories if m['category'] in ('Profile', 'Education', 'Skills', 'Projects')][:3]
+        summary = " Aur, ".join(profile_mems)
+        speak(f"Ji Samendra, mujhe aapke baare mein yeh sab yaad hai: {summary}.")
+    else:
+        speak("Samendra, memory vault mein abhi koi custom records nahi hain.")
+
+
+def updateProfileMemory(query):
+    from backend.memory_manager import add_user_memory, detect_memory_category
+    cleaned = re.sub(r'^(?:update\s+my\s+profile|update\s+my\s+skills|update\s+my\s+details|profile\s+update\s+karo)\s*(?::|to)?\s*', '', query, flags=re.IGNORECASE).strip()
+    if cleaned:
+        cat = detect_memory_category(cleaned)
+        add_user_memory(cat, cleaned, source="user_explicit")
+        speak(f"Aapka {cat} profile update kar diya gaya hai.")
+    else:
+        speak("Aap profile mein kya update karna chahte hain?")
 
 
 def clean_spoken_response(text, max_sentences=2):
@@ -455,18 +508,15 @@ def answer_personal_query(query):
     if any(p in q for p in ["about me", "know about me", "tell me about myself", "my profile", "who is samendra", "mere baare mein"]):
         return f"Aap {name} hain, ek {education} jo software development, AI/ML, networking, aur cloud technologies mein specialize kar rahe hain."
 
-    # 8. Check stored custom memories in jarvis.db
+    # 8. Check Context-Aware Relevant Memories from SQLite user_memories
     try:
-        from backend.db import get_priority_memories
-        memories = get_priority_memories()
-        if memories:
-            for m in memories:
-                m_text = m.get('transcription', '').lower()
-                q_words = [w for w in re.findall(r'\b\w+\b', q) if len(w) > 3 and w not in ('what', 'when', 'where', 'tell', 'about', 'remember', 'does', 'have', 'your', 'this', 'that', 'name', 'mera', 'meri', 'karo')]
-                if q_words and all(w in m_text for w in q_words):
-                    return f"Aapke memory logs ke anusaar: {m['transcription']}."
-    except Exception:
-        pass
+        from backend.memory_manager import get_relevant_memories
+        relevant_mems = get_relevant_memories(query, limit=2)
+        if relevant_mems:
+            mem_content = " ".join([m['content'] for m in relevant_mems])
+            return f"Aapke memory records ke anusaar: {mem_content}"
+    except Exception as e:
+        print(f"Memory lookup notice: {e}")
 
     return None
 

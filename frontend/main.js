@@ -490,6 +490,208 @@ $(document).ready(function () {
   });
 
   // -------------------------------------------------------------
+  // MEMORY VAULT MANAGEMENT UI LOGIC
+  // -------------------------------------------------------------
+  var activeCategoryFilter = "All";
+  var targetMemoryIdForAction = null;
+
+  async function updateMemoryBadge() {
+    if (typeof eel === "undefined" || !eel.getMemoryStats) return;
+    try {
+      var stats = await eel.getMemoryStats()();
+      if (stats && typeof stats.total_memories !== "undefined") {
+        $("#memory-counter-badge").text(stats.total_memories);
+      }
+    } catch (e) {
+      console.log("Error updating memory badge:", e);
+    }
+  }
+
+  async function loadMemoryVault(searchQuery, categoryFilter) {
+    if (typeof eel === "undefined" || !eel.getAllMemories) return;
+
+    var cat = categoryFilter || activeCategoryFilter || "All";
+    var query = searchQuery || $("#search-memory-vault").val() || "";
+
+    try {
+      var memories = await eel.getAllMemories(query, cat)();
+      var container = document.getElementById("memory-cards-grid");
+      container.innerHTML = "";
+
+      if (!memories || memories.length === 0) {
+        container.innerHTML = `
+          <div class="col-12 text-center py-4 text-muted">
+            <i class="bi bi-cpu fs-2 mb-2 d-block opacity-50"></i>
+            <p class="small mb-0">No memory records found in this category.</p>
+          </div>
+        `;
+        return;
+      }
+
+      $("#count-cat-all").text(memories.length);
+
+      memories.forEach(function (mem) {
+        var card = document.createElement("div");
+        card.className = "memory-card";
+        card.setAttribute("data-id", mem.id);
+
+        var sensBadge = mem.is_sensitive ? `<span class="badge bg-warning-subtle text-warning border border-warning-subtle small ms-1"><i class="bi bi-lock-fill"></i> Private</span>` : "";
+        var timeStr = formatCardTimestamp(mem.updated_at || mem.created_at);
+
+        card.innerHTML = `
+          <div class="memory-card-header">
+            <div>
+              <span class="memory-category-badge badge-cat-${escapeHtml(mem.category)}">${escapeHtml(mem.category)}</span>
+              ${sensBadge}
+            </div>
+            <div class="memory-card-actions">
+              <button class="btn-mem-action btn-edit-memory" title="Edit Memory" data-id="${mem.id}" data-cat="${escapeHtml(mem.category)}" data-content="${escapeHtml(mem.content)}" data-sensitive="${mem.is_sensitive}">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn-mem-action btn-mem-delete btn-delete-memory" title="Delete Memory" data-id="${mem.id}">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </div>
+          </div>
+          <div class="memory-card-content">${escapeHtml(mem.content)}</div>
+          <div class="memory-card-footer">
+            <span><i class="bi bi-clock me-1"></i> ${timeStr}</span>
+            <span class="text-muted">${escapeHtml(mem.source || 'user')}</span>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    } catch (e) {
+      console.log("Error loading memory vault:", e);
+    }
+  }
+
+  // Open Memory Vault
+  $("#btn-open-memory-vault").click(function () {
+    activeCategoryFilter = "All";
+    $(".cat-tab").removeClass("active");
+    $('.cat-tab[data-cat="All"]').addClass("active");
+    $("#search-memory-vault").val("");
+    loadMemoryVault();
+    $("#memory-vault-modal").fadeIn(150);
+  });
+
+  $("#memory-vault-close, #memory-vault-done-btn").click(function () {
+    $("#memory-vault-modal").fadeOut(150);
+  });
+
+  // Category Tab Filter
+  $(document).on("click", ".cat-tab", function () {
+    $(".cat-tab").removeClass("active");
+    $(this).addClass("active");
+    activeCategoryFilter = $(this).data("cat");
+    loadMemoryVault(null, activeCategoryFilter);
+  });
+
+  // Memory Search Input
+  $("#search-memory-vault").on("input", function () {
+    var val = $(this).val();
+    loadMemoryVault(val, activeCategoryFilter);
+  });
+
+  // Open Add Memory Modal
+  $("#btn-open-add-memory").click(function () {
+    targetMemoryIdForAction = null;
+    $("#memory-form-id").val("");
+    $("#memory-form-title").html('<i class="bi bi-plus-circle-fill text-info"></i> Add New Memory');
+    $("#memory-form-category").val(activeCategoryFilter !== "All" ? activeCategoryFilter : "Profile");
+    $("#memory-form-content").val("");
+    $("#memory-form-sensitive").prop("checked", false);
+    $("#memory-security-warning").hide().text("");
+    $("#memory-form-modal").fadeIn(150);
+    $("#memory-form-content").focus();
+  });
+
+  // Open Edit Memory Modal
+  $(document).on("click", ".btn-edit-memory", function () {
+    targetMemoryIdForAction = $(this).data("id");
+    var cat = $(this).data("cat");
+    var content = $(this).data("content");
+    var isSensitive = $(this).data("sensitive");
+
+    $("#memory-form-id").val(targetMemoryIdForAction);
+    $("#memory-form-title").html('<i class="bi bi-pencil-square text-info"></i> Edit Memory');
+    $("#memory-form-category").val(cat);
+    $("#memory-form-content").val(content);
+    $("#memory-form-sensitive").prop("checked", isSensitive === true || isSensitive === "true");
+    $("#memory-security-warning").hide().text("");
+    $("#memory-form-modal").fadeIn(150);
+    $("#memory-form-content").focus();
+  });
+
+  $("#memory-form-close, #memory-form-cancel").click(function () {
+    $("#memory-form-modal").fadeOut(150);
+    targetMemoryIdForAction = null;
+  });
+
+  // Save Memory (Add or Update)
+  $("#memory-form-save").click(async function () {
+    var memId = $("#memory-form-id").val();
+    var cat = $("#memory-form-category").val();
+    var content = $("#memory-form-content").val().trim();
+    var isSensitive = $("#memory-form-sensitive").is(":checked");
+
+    if (!content) {
+      $("#memory-security-warning").text("Please enter memory content.").show();
+      return;
+    }
+
+    // Client-side quick security warning
+    if (/(?:password|otp|pin|cvv|secret\s*key|api\s*key)\s*(?:is|:|=)/i.test(content)) {
+      $("#memory-security-warning").text("Security Notice: Passwords, OTPs, and API credentials cannot be stored.").show();
+      return;
+    }
+
+    if (memId) {
+      // Update Memory
+      if (typeof eel !== "undefined" && eel.updateMemory) {
+        var res = await eel.updateMemory(memId, cat, content, isSensitive)();
+        if (res && res.status === "blocked") {
+          $("#memory-security-warning").text(res.message).show();
+          return;
+        }
+      }
+    } else {
+      // Add Memory
+      if (typeof eel !== "undefined" && eel.addMemory) {
+        var res = await eel.addMemory(cat, content, isSensitive)();
+        if (res && res.status === "blocked") {
+          $("#memory-security-warning").text(res.message).show();
+          return;
+        }
+      }
+    }
+
+    $("#memory-form-modal").fadeOut(150);
+    await loadMemoryVault();
+    await updateMemoryBadge();
+  });
+
+  // Delete Memory Action
+  $(document).on("click", ".btn-delete-memory", async function () {
+    var memId = $(this).data("id");
+    if (!memId) return;
+
+    if (confirm("Are you sure you want to permanently delete this memory record?")) {
+      if (typeof eel !== "undefined" && eel.deleteMemory) {
+        await eel.deleteMemory(memId)();
+        await loadMemoryVault();
+        await updateMemoryBadge();
+      }
+    }
+  });
+
+  // Initial memory badge update
+  updateMemoryBadge();
+
+
+  // -------------------------------------------------------------
   // Date/Time Formatting Utilities
   // -------------------------------------------------------------
   function formatCardTimestamp(dateStr) {

@@ -197,15 +197,22 @@ def takeAllCommands(message=None):
                     query_lower = query.lower().strip()
                     break
 
-            is_priority = any(w in query_lower for w in ["remember", "yaad rakh", "yaad karo"])
+            is_priority = any(w in query_lower for w in ["remember", "yaad rakh", "yaad karo", "save to memory", "save this to my memory"])
             store_message_log("user", query, is_priority_memory=is_priority)
 
-            if any(w in query_lower for w in ["remember", "yaad rakh", "yaad karo"]):
+            # 1. Memory Commands
+            if any(w in query_lower for w in ["remember", "save to memory", "save this to my memory", "yaad rakh", "yaad karo"]):
                 from backend.feature import rememberMemory
                 rememberMemory(query)
-            elif any(w in query_lower for w in ["what do you remember", "recall", "my memories", "kya yaad hai", "memories batao"]):
+            elif any(w in query_lower for w in ["forget this", "forget memory", "forget about", "delete memory", "bhool jao"]):
+                from backend.feature import forgetMemory
+                forgetMemory(query)
+            elif any(w in query_lower for w in ["what do you remember", "recall", "my memories", "kya yaad hai", "memories batao", "mere baare mein kya yaad", "show my memories"]):
                 from backend.feature import recallMemories
-                recallMemories()
+                recallMemories(query)
+            elif any(w in query_lower for w in ["update my profile", "update my skills", "update my details", "profile update"]):
+                from backend.feature import updateProfileMemory
+                updateProfileMemory(query)
             elif any(w in query_lower for w in ["open", "launch", "show picture", "show photo", "show file", "show document", "start app", "kholo", "open karo", "chalu karo", "dikhao"]):
                 from backend.feature import openCommand
                 openCommand(query)
@@ -230,6 +237,14 @@ def takeAllCommands(message=None):
                 from backend.feature import PlayYoutube
                 PlayYoutube(query)
             else:
+                try:
+                    from backend.memory_manager import auto_detect_worth_remembering, add_user_memory
+                    should_rem, rem_content, rem_cat = auto_detect_worth_remembering(query)
+                    if should_rem and rem_content:
+                        add_user_memory(rem_cat, rem_content, source="auto_extracted")
+                except Exception:
+                    pass
+
                 from backend.feature import chatBot
                 chatBot(query)
         else:

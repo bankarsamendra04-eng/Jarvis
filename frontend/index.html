@@ -145,6 +145,11 @@
           </div>
 
           <div class="nav-right">
+            <button id="btn-open-memory-vault" class="nav-memory-btn" title="Open Long-Term Memory Vault">
+              <i class="bi bi-cpu-fill text-warning"></i>
+              <span>Memories</span>
+              <span id="memory-counter-badge" class="memory-count-badge">0</span>
+            </button>
             <div class="tech-chip d-none d-md-flex">
               <i class="bi bi-mic-fill text-info"></i>
               <span>Hinglish + Google Q&A</span>
@@ -329,6 +334,103 @@
         <div class="modal-footer-custom">
           <button class="btn-cancel" id="delete-cancel-btn">Cancel</button>
           <button class="btn-delete-confirm" id="delete-confirm-btn">Delete Permanently</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Memory Vault Management Modal -->
+    <div id="memory-vault-modal" class="custom-modal-backdrop" style="display: none;">
+      <div class="custom-modal-card memory-vault-card">
+        <div class="modal-header-custom">
+          <div class="d-flex align-items-center gap-2">
+            <div class="memory-vault-icon"><i class="bi bi-cpu-fill text-warning"></i></div>
+            <div>
+              <h5 class="mb-0">🧠 Long-Term Memory Vault</h5>
+              <span class="text-muted small">Personal Knowledge & Behavioral Memory Bank</span>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success-subtle text-success border border-success-subtle d-none d-sm-inline-flex align-items-center gap-1">
+              <i class="bi bi-shield-lock-fill"></i> Privacy Protected
+            </span>
+            <button class="modal-close-btn" id="memory-vault-close"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="memory-toolbar">
+          <div class="memory-search-wrapper">
+            <i class="bi bi-search"></i>
+            <input type="text" id="search-memory-vault" placeholder="Search memory records by keyword..." />
+          </div>
+          <button class="btn-add-memory" id="btn-open-add-memory">
+            <i class="bi bi-plus-circle-fill"></i> Add Memory
+          </button>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="memory-category-tabs" id="memory-category-tabs">
+          <button class="cat-tab active" data-cat="All">All (<span id="count-cat-all">0</span>)</button>
+          <button class="cat-tab" data-cat="Profile">Profile</button>
+          <button class="cat-tab" data-cat="Education">Education</button>
+          <button class="cat-tab" data-cat="Skills">Skills</button>
+          <button class="cat-tab" data-cat="Projects">Projects</button>
+          <button class="cat-tab" data-cat="Preferences">Preferences</button>
+          <button class="cat-tab" data-cat="Goals">Goals</button>
+          <button class="cat-tab" data-cat="Instructions">Instructions</button>
+        </div>
+
+        <!-- Memory Cards Grid -->
+        <div class="modal-body-custom memory-body-scroll" id="memory-cards-grid">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="modal-footer-custom justify-content-between">
+          <div class="text-muted small d-flex align-items-center gap-1">
+            <i class="bi bi-info-circle text-info"></i> Stored in local SQLite. Passwords & OTPs are strictly guarded.
+          </div>
+          <button class="btn-cancel" id="memory-vault-done-btn">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add / Edit Memory Modal -->
+    <div id="memory-form-modal" class="custom-modal-backdrop" style="display: none; z-index: 2200;">
+      <div class="custom-modal-card">
+        <div class="modal-header-custom">
+          <h5 id="memory-form-title"><i class="bi bi-pencil-square text-info"></i> Add New Memory</h5>
+          <button class="modal-close-btn" id="memory-form-close"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body-custom">
+          <input type="hidden" id="memory-form-id" value="" />
+          <div class="mb-3">
+            <label for="memory-form-category" class="form-label text-muted small">Category</label>
+            <select id="memory-form-category" class="modal-input modal-select">
+              <option value="Profile">Profile (Name, Bio, Identity)</option>
+              <option value="Education">Education (College, Degree, Courses)</option>
+              <option value="Skills">Skills (Languages, Frameworks, Tools)</option>
+              <option value="Projects">Projects (Current Apps, Systems)</option>
+              <option value="Preferences">Preferences (Style, Language, Formats)</option>
+              <option value="Goals">Goals (Career, Placements, Aspirations)</option>
+              <option value="Instructions">Instructions (Rules, Constraints)</option>
+              <option value="General">General Knowledge</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="memory-form-content" class="form-label text-muted small">Memory Content</label>
+            <textarea id="memory-form-content" rows="4" class="modal-input" placeholder="e.g. Prefers dark theme and concise explanations in Hinglish..."></textarea>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="memory-form-sensitive" />
+            <label class="form-check-label text-muted small" for="memory-form-sensitive">
+              <i class="bi bi-lock-fill text-warning"></i> Flag as sensitive personal data (phone, address, etc.)
+            </label>
+          </div>
+          <div id="memory-security-warning" class="alert alert-danger py-2 px-3 small mt-3" style="display: none;"></div>
+        </div>
+        <div class="modal-footer-custom">
+          <button class="btn-cancel" id="memory-form-cancel">Cancel</button>
+          <button class="btn-confirm" id="memory-form-save">Save Memory</button>
         </div>
       </div>
     </div>

@@ -27,10 +27,12 @@
 - **Hinglish (Hindi + English) NLP**: Speaks and understands natural conversational Hinglish (e.g., *"Hey Jarvis, mera naam kya hai?"*, *"VS Code kholo"*, *"Google pe search karo"*, *"Abhi time kitna hua hai?"*).
 - **Speech Recognition (STT)**: Multi-dialect Indian English & Hindi voice recognition via Google Speech API.
 
-### 🧠 2. Personal Profile & Long-Term Memory
-- **Personalized Context**: Pre-configured for **Samendra Bankar** (BTech 3rd-Year Student specializing in Software Development, AI/ML, Networking, Cloud/DevOps, and Embedded Systems).
-- **Persistent SQLite Database Memory**: All meaningful interactions and custom *"remember"* requests are stored permanently in `jarvis.db` (`message_logs` table).
-- **Personal Identity Q&A**: Instant answers about education, skills, interests, career goals, and saved memories.
+### 🧠 2. Secure Categorized Long-Term Memory System & Memory Vault
+- **Persistent Local Database**: Categorized SQLite memory bank (`user_memories`) covering Profile, Education, Skills, Projects, Preferences, Goals, and Behavioral Instructions.
+- **Security & Sensitive Data Guard**: Automatically blocks passwords, OTPs, CVVs, private keys, and payment credentials with immediate voice safety warnings.
+- **Context-Aware Smart Retrieval**: Intelligently scores and injects only the most relevant memories into conversations rather than sending the entire database.
+- **Automatic & Explicit Memory**: Automatically detects declarative user facts or records explicit voice triggers (*"Remember this..."*, *"Save to memory..."*, *"Forget this..."*, *"What do you remember about me?"*, *"Update my profile..."*).
+- **UI Memory Management Vault**: Full memory management screen with category tabs, search filter, inline editing, privacy tags, and single-click deletion.
 
 ### 🔍 3. Google Library Search & Real-Time Q&A
 - **Multi-Source Knowledge Engine**: Real-time integration with Google Search, Wikipedia summaries, and DuckDuckGo Instant Answers.
