@@ -48,5 +48,9 @@ backend/auth/samples/*.png
 
 # Temporary TTS speech cache
 frontend/assets/audio/tts_*.mp3
+
+# Sandboxed Coding Agent Workspaces
+workspace/
+workspace_test/
 frontend/assets/audio/tts_output.mp3
 

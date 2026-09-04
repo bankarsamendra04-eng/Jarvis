@@ -1,4 +1,5 @@
 import re
+import os
 import random
 from backend.context_manager import get_context_manager
 
@@ -35,23 +36,36 @@ def strip_meta_phrases(text: str) -> str:
 
 def classify_intent(query: str) -> str:
     q = query.lower().strip()
+
+    # 1. DESTRUCTIVE CONFIRMATIONS
+    if re.search(r'\b(?:yes,? confirm|confirm delete|yes do it|yes delete)\b', q):
+        return "CONFIRM_YES"
+    if re.search(r'\b(?:no,? cancel|cancel delete|do not delete|no cancel)\b', q):
+        return "CONFIRM_NO"
     
-    # 1. EXPLICIT INTERVIEW ADVICE (Only if explicitly asking for interview guidance)
+    # 2. EXPLICIT INTERVIEW ADVICE (Only if explicitly asking for interview guidance)
     if re.search(r'\b(?:in an? interview|for an? interview|interview answer|interview tips?|how to answer in interview|how should i answer .* in an? interview)\b', q):
         return "INTERVIEW_HELP"
 
-    # 2. MEANING OF PHRASE
+    # 3. MEANING OF PHRASE
     if re.search(r'\b(?:what does .* mean|meaning of [\'"].*[\'"]|definition of phrase)\b', q):
         return "EXPLANATION"
 
-    # 3. SELF-INTRODUCTION & ABOUT-ASSISTANT (Highest Priority for assistant-centric questions)
+    # 4. SELF-INTRODUCTION & ABOUT-ASSISTANT (Highest Priority for assistant-centric questions)
     if re.search(
         r'\b(?:tell me about (?:yourself|you)|tell me something about (?:yourself|you)|who are you|what are you|introduce yourself|give me your introduction|your introduction|what can you do|what are your capabilities|what capabilities do you have|what are your features|what features (?:do you have|you have)|how can you help (?:me)?|what is your purpose|who is my assistant|what makes you different|who made you|about you|about yourself|aap kaun ho|apne baare mein batao|tum kaun ho|kya kar sakte ho|tumhara kya kaam hai)\b',
         q
     ):
         return "SELF_INTRODUCTION"
 
-    # 4. Other Specialized Intents
+    # 5. AI CODING AGENT & PROJECT OPERATIONS
+    if re.search(
+        r'\b(?:create (?:a )?new (?:python|web|html|node|java|flask|fastapi)?\s*project|create the (?:html|python|css|javascript|js|main)\s+file|create file|show (?:me )?(?:the )?project structure|project (?:structure|tree)|run (?:the )?project|execute (?:the )?project|prepare (?:this )?project for github|prepare for github|generate (?:git )?commit(?: message)?|explain this function|explain this code|delete file|delete project)\b',
+        q
+    ):
+        return "CODING_AGENT"
+
+    # 6. Other Specialized Intents
     if re.search(r'\b(take my viva|viva voce|viva questions?|viva)\b', q):
         return "VIVA"
     if re.search(r'\b(debug|fix this code|fix this error|fix that code|fix it|fix the above error|error:|syntaxerror|indexerror|typeerror|bug in)\b', q):
@@ -80,18 +94,20 @@ def generate_self_introduction(query: str):
     if any(w in q for w in ["what can you do", "capabilities", "features", "how can you help", "kya kar sakte ho"]):
         display_text = """### ⚡ What I Can Do
 
-I am your **Personal AI Voice Assistant**, designed to assist you with learning, development, productivity, and system management:
+I am your **Personal AI Voice Assistant & Coding Agent**, designed to assist you with learning, software development, productivity, and system management:
 
-#### 🎓 1. AI Study Mode & Coach
+#### 🛠️ 1. AI Coding Agent Mode
+- **Project Scaffolding**: Create full Python and Web projects with modular architecture.
+- **File Management & Inspection**: Create, read, and modify code files with syntax checking.
+- **Sandboxed Execution**: Run safe project code and tests inside an isolated sandbox.
+- **Error Detection & Fixing**: Diagnose stack traces (`IndexError`, `ZeroDivisionError`) and generate verified patches.
+- **GitHub & Git Prep**: Scaffolds `.gitignore`, `README.md`, `LICENSE`, and generates semantic commit messages.
+
+#### 🎓 2. AI Study Mode & Coach
 - **Concept Explanations**: Simple, step-by-step, and Hinglish technical breakdowns.
 - **Practice MCQs & Quizzes**: Tailored question sets with immediate scoring and answer keys.
 - **Viva Voce Examiner**: Mock technical interviews with model answers.
 - **Weak-Topic Detection**: Automatically detects study weaknesses and organizes personalized revisions.
-
-#### 💻 2. Coding & Software Development
-- **Code Generation**: Complete, tested implementations in Python, Java, JavaScript, C++, and SQL.
-- **Debugging & Error Fixes**: Root cause diagnosis for `IndexError`, `SyntaxError`, `404`, etc.
-- **Complexity Analysis**: Big-O Time and Space complexity for algorithms.
 
 #### 🎯 3. Personal Goals & Daily Action Planner
 - **Goal Management**: Track learning, projects, exams, and internship tasks with interactive milestone checklists.
@@ -106,20 +122,20 @@ I am your **Personal AI Voice Assistant**, designed to assist you with learning,
 - **Universal Launcher**: Opens applications, project files, documents, and settings.
 - **WhatsApp & YouTube**: Hands-free voice messaging, calls, and music streaming."""
         
-        spoken_text = "I'm your personal AI voice assistant. I can help you with learning, coding, projects, productivity, and everyday tasks. You can study with me, generate MCQs, debug code, track your goals, or control your system with voice commands."
+        spoken_text = "I'm your personal AI voice assistant and coding agent. I can help you scaffold projects, write and debug code, run safe sandboxed tests, prepare repos for GitHub, study with MCQs and viva sessions, and manage your goals."
         return display_text, spoken_text
 
     # Purpose queries
     elif any(w in q for w in ["purpose", "what is your purpose", "tumhara kya kaam hai"]):
         display_text = """### 🎯 My Purpose
 
-My purpose is to serve as your **dedicated personal AI voice assistant**—empowering you to:
-1. **Learn & Master Concepts**: Through interactive study modes, MCQs, and viva simulations.
-2. **Build Software Faster**: By generating tested code, fixing bugs, and managing project architecture.
-3. **Achieve Goals & Stay Focused**: By organizing your milestones into structured daily action plans.
+My purpose is to serve as your **dedicated personal AI voice assistant & software engineering agent**—empowering you to:
+1. **Build & Ship Software**: Scaffold projects, debug errors, run tests, and prepare for GitHub.
+2. **Learn & Master Concepts**: Interactive study modes, MCQs, and viva simulations.
+3. **Achieve Goals & Stay Focused**: Organize milestones into structured daily action plans.
 4. **Automate Daily Workflows**: Hands-free desktop control, search, and communication."""
         
-        spoken_text = "My purpose is to be your intelligent personal assistant—helping you study, write code, manage goals, and automate daily tasks efficiently."
+        spoken_text = "My purpose is to be your intelligent personal assistant and coding agent—helping you scaffold projects, debug code, study, manage goals, and automate daily tasks efficiently."
         return display_text, spoken_text
 
     # General Self-Introduction ("Tell me about yourself", "Who are you?", "Introduce yourself")
@@ -129,6 +145,7 @@ My purpose is to serve as your **dedicated personal AI voice assistant**—empow
 I'm your personal AI voice assistant, here to help you learn, build, and get things done.
 
 #### 🌟 How I Can Help:
+- **🛠️ AI Coding Agent**: Scaffold Python/Web projects, create files, run code in sandbox, and prep for GitHub.
 - **Direct Answers & Explanations**: Ask me any technical or general question for clear, structured answers.
 - **AI Study Mode**: Practice MCQs, take viva voce quizzes, review flashcards, and revise weak topics.
 - **Coding & Debugging**: Write clean code in Python, Java, JavaScript, and debug errors with tested solutions.
@@ -138,7 +155,7 @@ I'm your personal AI voice assistant, here to help you learn, build, and get thi
 
 You can speak to me naturally in English or Hinglish anytime!"""
 
-        spoken_text = "I'm your personal AI voice assistant. I'm here to help you learn, build, and get things done. I can answer questions, explain difficult topics, create MCQs and quizzes, help you write and debug code, assist with your projects, remember useful information you ask me to save, and help you stay organized. You can simply talk to me naturally, and I'll try to understand what you need and respond accordingly."
+        spoken_text = "I'm your personal AI voice assistant. I'm here to help you learn, build, and get things done. I can answer questions, scaffold projects, create files, run code safely in a sandbox, explain difficult topics, create MCQs, help you debug code, and assist with your projects. You can simply talk to me naturally, and I'll assist you right away."
         return display_text, spoken_text
 
 
@@ -154,7 +171,7 @@ Here is the recommended **Present - Past - Future Framework** for a software eng
 > *"I am a Computer Science student / Software Developer with a strong foundation in Python, Java, Web Development, and AI systems."*
 
 #### 2. Past (Key accomplishments & projects):
-> *"Recently, I developed an intelligent AI Desktop Voice Assistant called JARVIS featuring biometric authentication, hands-free hotword detection, study mode with weak-topic analytics, and automated system workflows."*
+> *"Recently, I developed an intelligent AI Desktop Voice Assistant & Coding Agent called JARVIS featuring biometric authentication, sandboxed execution, study mode with weak-topic analytics, and automated system workflows."*
 
 #### 3. Future (Why you are here):
 > *"I am passionate about building scalable, intelligent applications, and I'm excited about this opportunity to contribute to high-impact engineering projects at your company."*
@@ -800,11 +817,69 @@ def process_user_query_with_intent(query: str):
     intent = classify_intent(q_clean)
     print(f"[Intent Engine] Classified Intent: {intent} for query: '{q_clean}'")
 
-    if intent == "SELF_INTRODUCTION":
+    if intent == "CONFIRM_YES":
+        from backend.coding_agent import get_coding_agent
+        return get_coding_agent().confirm_action(True)
+
+    elif intent == "CONFIRM_NO":
+        from backend.coding_agent import get_coding_agent
+        return get_coding_agent().confirm_action(False)
+
+    elif intent == "SELF_INTRODUCTION":
         return generate_self_introduction(q_clean)
 
     elif intent == "INTERVIEW_HELP":
         return generate_interview_answer_guide(q_clean)
+
+    elif intent == "CODING_AGENT":
+        from backend.coding_agent import get_coding_agent
+        agent = get_coding_agent()
+        q_lower = q_clean.lower()
+
+        if "create" in q_lower and "project" in q_lower:
+            ptype = "web" if "web" in q_lower or "html" in q_lower else "python"
+            pname_match = re.search(r'project\s+(?:named|called)?\s*([a-zA-Z0-9_\-]+)', q_clean, re.IGNORECASE)
+            pname = pname_match.group(1) if pname_match else f"{ptype}_app"
+            return agent.create_project(pname, template_type=ptype)
+
+        elif "create" in q_lower and "file" in q_lower:
+            fname_match = re.search(r'file\s+([a-zA-Z0-9_\-\.]+)', q_clean, re.IGNORECASE)
+            fname = fname_match.group(1) if fname_match else ("index.html" if "html" in q_lower else ("style.css" if "css" in q_lower else "app.py"))
+            return agent.create_file(fname)
+
+        elif "structure" in q_lower or "tree" in q_lower:
+            tree = agent.get_project_tree()
+            disp = f"### 📁 Project Structure: `{agent.active_project}`\n\n```plaintext\n{tree}\n```"
+            spoken = f"Here is the directory structure for project {agent.active_project}."
+            return disp, spoken
+
+        elif "run" in q_lower and ("project" in q_lower or "code" in q_lower):
+            return agent.run_project()
+
+        elif "prepare" in q_lower and "github" in q_lower:
+            return agent.prepare_for_github()
+
+        elif "commit" in q_lower:
+            msg_match = re.search(r'commit(?:\s+message)?\s*(?:for)?\s*(.*)', q_clean, re.IGNORECASE)
+            msg = msg_match.group(1).strip() if msg_match else None
+            return agent.generate_git_commit(msg)
+
+        elif "explain" in q_lower and ("function" in q_lower or "code" in q_lower):
+            app_file = os.path.join(agent.get_project_dir(), "src", "app.py")
+            code_snippet = ""
+            if os.path.exists(app_file):
+                with open(app_file, "r", encoding="utf-8") as f:
+                    code_snippet = f.read()
+            if not code_snippet:
+                code_snippet = "def solve(data):\n    return [x * 2 for x in data]"
+            return agent.explain_code(code_snippet)
+
+        elif "delete" in q_lower:
+            target = q_clean.split()[-1]
+            return agent.request_destructive_confirmation("delete_file", target, None)
+
+        else:
+            return agent.create_project("my_project", template_type="python")
 
     elif intent == "MCQ_GENERATION":
         count = 10

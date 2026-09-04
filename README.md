@@ -93,14 +93,32 @@
 ### 🧠 12. Context-Aware Conversation Management & Reference Resolution
 - **Short-Term Context Memory**: Maintains active state for Current Project, Previous Project, Current Task, Current Topic, Recent Files, Recent Commands, Recent Errors, and Last Generated Code Snippets.
 - **Implicit Context Understanding**: E.g., *"I'm building a quiz app"* &rarr; *"Create the JavaScript file"* &rarr; Jarvis automatically synthesizes the task and generates complete `script.js` with question bank, scoring, and UI listeners.
-- **Deictic & Anaphoric Pronoun Resolution**: Intelligently resolves references:
-  - *"this"*, *"that"*, *"it"*
-  - *"the previous project"*, *"my previous project"*
-  - *"the last file"*, *"that file"*, *"this file"*
-  - *"that code"*, *"this code"*, *"the code"*
-  - *"the above error"*, *"this error"*, *"that error"*
-  - *"my current project"*, *"this project"*
-- **Ambiguity Detection & Targeted Clarifications**: Rather than blindly guessing when multiple candidates exist, asks concise, targeted clarifying questions (e.g., *"Are you referring to script.js or style.css for the Quiz App?"*).
+- **Deictic & Anaphoric Pronoun Resolution**: Intelligently resolves references (*"this"*, *"that"*, *"it"*, *"the previous project"*, *"the last file"*, *"that code"*, *"the above error"*, *"my current project"*).
+- **Ambiguity Detection & Targeted Clarifications**: Asks concise, targeted clarifying questions when multiple candidates exist.
+
+### 🛠️ 13. AI Coding Agent Mode & Sandboxed Execution
+- **12 Developer Capabilities**:
+  1. **Scaffold Project Structures**: Automatic modular architecture for Python and Web/Frontend apps.
+  2. **Create Files**: Automatic file generation (`app.py`, `index.html`, `style.css`, `script.js`).
+  3. **Read Project Files**: Formatted code viewer with line numbers.
+  4. **Modify Code**: Safe file updates with automated backup (`.bak`).
+  5. **Explain Code & AST**: Detailed breakdown of functions, classes, and Big-O complexity.
+  6. **Detect Errors**: Static and runtime traceback analysis.
+  7. **Suggest Fixes**: Verified defensive patches for `ZeroDivisionError`, `IndexError`, `KeyError`, etc.
+  8. **Generate Commands**: Safe development command suggestions.
+  9. **Sandboxed Command Execution**: Subprocess runner with working directory isolation, output capture, and timeout caps.
+  10. **Application Debugging**: Runs code in sandbox, catches exceptions, and auto-proposes fixes.
+  11. **Generate Professional READMEs**: Auto-generates GitHub-ready documentation with architecture trees.
+  12. **Git & GitHub Readiness**: Prepares `.gitignore`, `LICENSE`, `git init`, and semantic commit messages.
+- **Destructive Confirmation Guard**: Prompts for explicit user confirmation before any destructive delete action.
+- **Coding Voice Commands**:
+  - *"Create a new Python project."* / *"Create a new web project."*
+  - *"Create the HTML file."*
+  - *"Show me the project structure."*
+  - *"Explain this function."*
+  - *"Fix this error."*
+  - *"Run the project."*
+  - *"Prepare this project for GitHub."*
 
 ---
 
@@ -116,6 +134,7 @@ Jarvis/
 │   │   ├── trainer.py                            # LBPH model trainer
 │   │   └── trainer/
 │   │       └── trainer.yml                       # Trained biometric weights
+│   ├── coding_agent.py                           # AI Coding Agent & Sandboxed Execution Engine
 │   ├── command.py                                # TTS (Indian Voice), STT & command routing
 │   ├── config.py                                 # Voice, user profile & assistant configuration
 │   ├── context_manager.py                        # Context-Aware Conversation & Reference Engine

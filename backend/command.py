@@ -343,3 +343,23 @@ def resetConversationContext():
     from backend.context_manager import get_context_manager
     get_context_manager().reset_context()
     return {"status": "success"}
+
+
+@eel.expose
+def getCodingAgentProjectTree(project_name=None):
+    from backend.coding_agent import get_coding_agent
+    return get_coding_agent().get_project_tree(project_name)
+
+
+@eel.expose
+def runSandboxCommand(command):
+    from backend.coding_agent import get_coding_agent
+    disp, spoken = get_coding_agent().run_sandbox_command(command)
+    return {"display": disp, "spoken": spoken}
+
+
+@eel.expose
+def prepareProjectForGitHub(project_name=None):
+    from backend.coding_agent import get_coding_agent
+    disp, spoken = get_coding_agent().prepare_for_github(project_name)
+    return {"display": disp, "spoken": spoken}
