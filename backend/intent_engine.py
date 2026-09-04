@@ -35,6 +35,23 @@ def strip_meta_phrases(text: str) -> str:
 
 def classify_intent(query: str) -> str:
     q = query.lower().strip()
+    
+    # 1. EXPLICIT INTERVIEW ADVICE (Only if explicitly asking for interview guidance)
+    if re.search(r'\b(?:in an? interview|for an? interview|interview answer|interview tips?|how to answer in interview|how should i answer .* in an? interview)\b', q):
+        return "INTERVIEW_HELP"
+
+    # 2. MEANING OF PHRASE
+    if re.search(r'\b(?:what does .* mean|meaning of [\'"].*[\'"]|definition of phrase)\b', q):
+        return "EXPLANATION"
+
+    # 3. SELF-INTRODUCTION & ABOUT-ASSISTANT (Highest Priority for assistant-centric questions)
+    if re.search(
+        r'\b(?:tell me about (?:yourself|you)|tell me something about (?:yourself|you)|who are you|what are you|introduce yourself|give me your introduction|your introduction|what can you do|what are your capabilities|what capabilities do you have|what are your features|what features (?:do you have|you have)|how can you help (?:me)?|what is your purpose|who is my assistant|what makes you different|who made you|about you|about yourself|aap kaun ho|apne baare mein batao|tum kaun ho|kya kar sakte ho|tumhara kya kaam hai)\b',
+        q
+    ):
+        return "SELF_INTRODUCTION"
+
+    # 4. Other Specialized Intents
     if re.search(r'\b(take my viva|viva voce|viva questions?|viva)\b', q):
         return "VIVA"
     if re.search(r'\b(debug|fix this code|fix this error|fix that code|fix it|fix the above error|error:|syntaxerror|indexerror|typeerror|bug in)\b', q):
@@ -49,8 +66,110 @@ def classify_intent(query: str) -> str:
         return "CALCULATION"
     if re.search(r'\b(study mode|flashcard|revision|summarize topic)\b', q):
         return "STUDY"
+        
     return "QUESTION_ANSWER"
 
+# -------------------------------------------------------------
+# 1. Self-Introduction & Identity Generator
+# -------------------------------------------------------------
+def generate_self_introduction(query: str):
+    q = query.lower().strip()
+    CONVERSATION_CONTEXT["last_intent"] = "SELF_INTRODUCTION"
+
+    # Capability / Feature / Help queries
+    if any(w in q for w in ["what can you do", "capabilities", "features", "how can you help", "kya kar sakte ho"]):
+        display_text = """### ⚡ What I Can Do
+
+I am your **Personal AI Voice Assistant**, designed to assist you with learning, development, productivity, and system management:
+
+#### 🎓 1. AI Study Mode & Coach
+- **Concept Explanations**: Simple, step-by-step, and Hinglish technical breakdowns.
+- **Practice MCQs & Quizzes**: Tailored question sets with immediate scoring and answer keys.
+- **Viva Voce Examiner**: Mock technical interviews with model answers.
+- **Weak-Topic Detection**: Automatically detects study weaknesses and organizes personalized revisions.
+
+#### 💻 2. Coding & Software Development
+- **Code Generation**: Complete, tested implementations in Python, Java, JavaScript, C++, and SQL.
+- **Debugging & Error Fixes**: Root cause diagnosis for `IndexError`, `SyntaxError`, `404`, etc.
+- **Complexity Analysis**: Big-O Time and Space complexity for algorithms.
+
+#### 🎯 3. Personal Goals & Daily Action Planner
+- **Goal Management**: Track learning, projects, exams, and internship tasks with interactive milestone checklists.
+- **Daily Action Plan**: Intelligent time-blocked action plans tailored to your active goals.
+
+#### 🧠 4. Secure Long-Term Memory
+- **Personalized Context**: Stores your profile, skills, projects, and custom instructions.
+- **Privacy First**: Secure local SQLite storage with safety guards against sensitive credentials.
+
+#### 🎙️ 5. Conversational & Desktop Automation
+- **Natural Voice**: Fluent speech in authentic Indian English and conversational Hinglish.
+- **Universal Launcher**: Opens applications, project files, documents, and settings.
+- **WhatsApp & YouTube**: Hands-free voice messaging, calls, and music streaming."""
+        
+        spoken_text = "I'm your personal AI voice assistant. I can help you with learning, coding, projects, productivity, and everyday tasks. You can study with me, generate MCQs, debug code, track your goals, or control your system with voice commands."
+        return display_text, spoken_text
+
+    # Purpose queries
+    elif any(w in q for w in ["purpose", "what is your purpose", "tumhara kya kaam hai"]):
+        display_text = """### 🎯 My Purpose
+
+My purpose is to serve as your **dedicated personal AI voice assistant**—empowering you to:
+1. **Learn & Master Concepts**: Through interactive study modes, MCQs, and viva simulations.
+2. **Build Software Faster**: By generating tested code, fixing bugs, and managing project architecture.
+3. **Achieve Goals & Stay Focused**: By organizing your milestones into structured daily action plans.
+4. **Automate Daily Workflows**: Hands-free desktop control, search, and communication."""
+        
+        spoken_text = "My purpose is to be your intelligent personal assistant—helping you study, write code, manage goals, and automate daily tasks efficiently."
+        return display_text, spoken_text
+
+    # General Self-Introduction ("Tell me about yourself", "Who are you?", "Introduce yourself")
+    else:
+        display_text = """### 🤖 Hello! I am your Personal AI Voice Assistant
+
+I'm your personal AI voice assistant, here to help you learn, build, and get things done.
+
+#### 🌟 How I Can Help:
+- **Direct Answers & Explanations**: Ask me any technical or general question for clear, structured answers.
+- **AI Study Mode**: Practice MCQs, take viva voce quizzes, review flashcards, and revise weak topics.
+- **Coding & Debugging**: Write clean code in Python, Java, JavaScript, and debug errors with tested solutions.
+- **Project & Context Tracking**: I understand conversational context like *"this file"*, *"that error"*, or *"my current project"*.
+- **Goal & Progress Tracking**: Set milestones and generate tailored daily action plans.
+- **Memory & Personalization**: Remember your preferences, skills, and important instructions.
+
+You can speak to me naturally in English or Hinglish anytime!"""
+
+        spoken_text = "I'm your personal AI voice assistant. I'm here to help you learn, build, and get things done. I can answer questions, explain difficult topics, create MCQs and quizzes, help you write and debug code, assist with your projects, remember useful information you ask me to save, and help you stay organized. You can simply talk to me naturally, and I'll try to understand what you need and respond accordingly."
+        return display_text, spoken_text
+
+
+# -------------------------------------------------------------
+# 2. Explicit Interview Answer Formulator (Only when explicitly asked)
+# -------------------------------------------------------------
+def generate_interview_answer_guide(query: str):
+    display_text = """### 💼 How to Answer "Tell Me About Yourself" in an Interview
+
+Here is the recommended **Present - Past - Future Framework** for a software engineering / developer interview:
+
+#### 1. Present (Who you are today):
+> *"I am a Computer Science student / Software Developer with a strong foundation in Python, Java, Web Development, and AI systems."*
+
+#### 2. Past (Key accomplishments & projects):
+> *"Recently, I developed an intelligent AI Desktop Voice Assistant called JARVIS featuring biometric authentication, hands-free hotword detection, study mode with weak-topic analytics, and automated system workflows."*
+
+#### 3. Future (Why you are here):
+> *"I am passionate about building scalable, intelligent applications, and I'm excited about this opportunity to contribute to high-impact engineering projects at your company."*
+
+#### 💡 Key Tips:
+- Keep your response between **60 to 90 seconds**.
+- Focus on technical skills, projects, and problem-solving impact rather than personal hobbies.
+"""
+    spoken_text = "When answering 'Tell me about yourself' in an interview, use the Present, Past, and Future framework: introduce your current focus and technical skills, highlight your key projects, and explain why you are excited for this role."
+    return display_text, spoken_text
+
+
+# -------------------------------------------------------------
+# 3. Practice MCQs Generator
+# -------------------------------------------------------------
 def generate_mcqs(topic: str, count: int = 10):
     t_clean = topic.strip()
     CONVERSATION_CONTEXT["last_topic"] = t_clean
@@ -254,6 +373,9 @@ def generate_mcqs(topic: str, count: int = 10):
     
     return screen_text, spoken_summary
 
+# -------------------------------------------------------------
+# 4. Structured Pedagogical Explanation Generator
+# -------------------------------------------------------------
 def generate_structured_explanation(topic: str):
     t_clean = topic.strip()
     CONVERSATION_CONTEXT["last_topic"] = t_clean
@@ -328,6 +450,9 @@ def generate_structured_explanation(topic: str):
     spoken = f"{title} is {defn.split('.')[0]}. {analogy.split('.')[0]}. I have displayed the complete 6-part breakdown on your screen."
     return content, spoken
 
+# -------------------------------------------------------------
+# 5. Direct Coding Solution Generator
+# -------------------------------------------------------------
 def generate_code_solution(query: str):
     q = query.lower()
     cm = get_context_manager()
@@ -633,6 +758,9 @@ python script.py
     spoken = "I have generated the executable code solution on your screen."
     return text, spoken
 
+# -------------------------------------------------------------
+# 6. Debugging Solution Generator
+# -------------------------------------------------------------
 def generate_debugging_solution(query: str):
     CONVERSATION_CONTEXT["last_intent"] = "DEBUGGING"
     cm = get_context_manager()
@@ -660,6 +788,9 @@ Always validate indices against `len(collection)` or wrap lookups in `try...exce
     spoken = f"I have analyzed {last_err} and provided the root cause and tested fix on your screen."
     return text, spoken
 
+# -------------------------------------------------------------
+# 7. Master Dispatcher
+# -------------------------------------------------------------
 def process_user_query_with_intent(query: str):
     """
     Main entry point for intelligent intent-driven responses.
@@ -669,7 +800,13 @@ def process_user_query_with_intent(query: str):
     intent = classify_intent(q_clean)
     print(f"[Intent Engine] Classified Intent: {intent} for query: '{q_clean}'")
 
-    if intent == "MCQ_GENERATION":
+    if intent == "SELF_INTRODUCTION":
+        return generate_self_introduction(q_clean)
+
+    elif intent == "INTERVIEW_HELP":
+        return generate_interview_answer_guide(q_clean)
+
+    elif intent == "MCQ_GENERATION":
         count = 10
         count_match = re.search(r'\b(\d{1,2})\s*(?:mcq|questions|quiz)', q_clean, re.IGNORECASE)
         if count_match:

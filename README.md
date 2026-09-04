@@ -212,6 +212,11 @@ python main.py
 | :--- | :--- | :--- |
 | **Wake Word Activation** | *"Hey Jarvis"* / *"Hello Jarvis"* | Opens voice command mic and asks: *"Ji Samendra, boliye?"* |
 | **Direct Wake Commands** | *"Hey Jarvis VS Code kholo"* | Strips wake word and launches VS Code immediately |
+| **Self-Introduction** | *"Tell me about yourself"* / *"Who are you?"* | Speaks dynamic self-introduction & displays full capability overview |
+| **Capabilities & Features**| *"What can you do?"* / *"What are your features?"* | Details AI Study Mode, coding, memory, goals, and automation |
+| **Assistant Purpose** | *"What is your purpose?"* | Explains core purpose as personal AI assistant |
+| **Contextual Code/File** | *"Create the JavaScript file"* (in project) | Context-aware synthesis: generates full quiz logic/script.js |
+| **Context Reference** | *"Add CSS for that"* / *"Show the last file"* | Resolves pronouns (*"that"*, *"it"*, *"last file"*) to active project |
 | **Daily Action Plan** | *"What should I work on today?"* / *"Aaj kya karna hai?"* | Generates and speaks tailored daily action plan |
 | **Goal Summary** | *"Show my goals"* / *"Active goals dikhao"* | Speaks active goals summary and opens Goals Dashboard |
 | **Goal Progress** | *"Which goal is closest to completion?"* | Identifies closest goal and current progress % |
