@@ -8,9 +8,16 @@ from backend.command import *
 import backend.db  # Ensures database tables are initialized
 import backend.goals_manager  # Ensures goals table and eel endpoints are initialized
 import backend.study_manager  # Ensures study mode tables and eel endpoints are initialized
+import backend.wake_word  # Two-stage background wake-word engine
 
 def start():
     eel.init("frontend") 
+    
+    # Start continuous background wake-word listener ("Hey Jarvis" / "Hello Jarvis")
+    try:
+        backend.wake_word.start_wake_word_service()
+    except Exception as wake_err:
+        print(f"Wake word startup notice: {wake_err}")
     
     try:
         play_assistant_sound()

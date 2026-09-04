@@ -28,6 +28,25 @@ $(document).ready(function () {
     $("#SiriWave").attr("hidden", false);
   }
 
+  eel.expose(setVoiceState);
+  function setVoiceState(state, message) {
+    if (state === "IDLE" || state === "WAKE_LISTENING") {
+      $("#Oval").attr("hidden", false);
+      $("#SiriWave").attr("hidden", true);
+      DisplayMessage(message || "Say 'Hey Jarvis' or 'Hello Jarvis'");
+    } else if (state === "LISTENING" || state === "COMMAND_LISTENING" || state === "WAKE_WORD_DETECTED") {
+      $("#Oval").attr("hidden", true);
+      $("#SiriWave").attr("hidden", false);
+      DisplayMessage(message || "🎤 Listening...");
+    } else if (state === "PROCESSING" || state === "THINKING") {
+      DisplayMessage(message || "⚡ Thinking...");
+    } else if (state === "SPEAKING") {
+      DisplayMessage(message || "🔊 Speaking...");
+    } else if (state === "ERROR") {
+      DisplayMessage(message || "❌ Microphone Error");
+    }
+  }
+
   // -------------------------------------------------------------
   // Dynamic Message Appenders
   // -------------------------------------------------------------

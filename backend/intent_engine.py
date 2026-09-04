@@ -87,7 +87,11 @@ def classify_intent(query: str) -> str:
         return "PROJECT_HELP"
 
     # 11. FILE CREATION (Explicit file creation on desktop / downloads / filesystem)
-    if re.search(r'\b(?:create|make|build|generate)\s+(?:a\s+|an\s+)?(?:[a-zA-Z0-9_\-]+\s+)?file\b', q) or re.search(r'\b(?:create|make)\s+(?:a\s+|an\s+)?(?:html|python|cpp|c\+\+|java|javascript|css|json|text|md)\s+file\b', q):
+    if (
+        re.search(r'\b(?:create|make|build|generate)\s+(?:a\s+|an\s+)?(?:[a-zA-Z0-9_\-]+\s+)?file\b', q) or
+        re.search(r'\b(?:create|make)\s+(?:a\s+|an\s+)?(?:html|python|cpp|c\+\+|java|javascript|css|json|text|md)\s+file\b', q) or
+        re.search(r'\b(?:create|make|generate|build)\s+([a-zA-Z0-9_\-]+\.(?:html|htm|py|cpp|c|java|js|ts|css|json|txt|md|sql))\b', q)
+    ):
         return "FILE_CREATE"
 
     # 12. FOLDER CREATION

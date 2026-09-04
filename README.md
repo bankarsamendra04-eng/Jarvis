@@ -21,8 +21,12 @@
 
 ## 🌟 Key Features & Capabilities
 
-### 🎙️ 1. Authentic Indian Male Voice & Hinglish Assistant
-- **"Hey Jarvis" Hands-Free Wake Word**: Say *"Hey Jarvis"* (or *"Hello Jarvis"*, *"Jarvis"*) to instantly activate the voice command mic, trigger the waveform UI, and give your instruction.
+### 🎙️ 1. Two-Stage Continuous Wake-Word Engine & Authentic Indian Male Voice
+- **Continuous Two-Stage Voice Architecture**:
+  - **Stage 1 (Background Wake Listener)**: Lightweight continuous listening thread monitoring for *"Hey Jarvis"* and *"Hello Jarvis"* (case-insensitive, punctuation-tolerant).
+  - **Stage 2 (Command Listener & Execution Pipeline)**: Upon wake detection, plays activation chime, switches UI to `🎤 Listening...` (`SiriWave`), captures the user's command, and automatically strips the wake phrase before passing to the AI intent router.
+  - **Single & Multi-Utterance Support**: Handles both wake phrase alone (*"Hey Jarvis"* &rarr; opens mic and waits) and full single-sentence instructions (*"Hey Jarvis, tell me about the OSI model"* &rarr; immediate command execution).
+  - **Thread-Safe & Anti-Conflict**: Automatically pauses the background wake listener during manual command inputs (`#MicBtn`, `Win+J`), active speech recognition, or TTS audio playback, eliminating duplicate microphone listeners and feedback loops.
 - **Human-Grade Neural Voice Engine**: Powered by `edge-tts` (`en-IN-PrabhatNeural`) tuned with deeper baritone resonance, crisp pacing, and commanding volume for a realistic Indian male persona.
 - **Hinglish (Hindi + English) NLP**: Speaks and understands natural conversational Hinglish (e.g., *"Hey Jarvis, mera naam kya hai?"*, *"VS Code kholo"*, *"Google pe search karo"*, *"Abhi time kitna hua hai?"*).
 - **Speech Recognition (STT)**: Multi-dialect Indian English & Hindi voice recognition via Google Speech API.
@@ -148,8 +152,9 @@ Jarvis/
 │   ├── goals_manager.py                          # Personal Goal & Progress Tracking + Daily Action Planner
 │   ├── helper.py                                 # String processing and regex helpers
 │   ├── intent_engine.py                          # Master Intent Engine, Direct Output & Meta-Phrase Filter
-│   ├── memory_manager.py                         # Secure Categorized Long-Term Memory Vault
-│   ├── study_manager.py                          # AI Study Mode, MCQs, Viva, Exam Q&A & Weak-Topic Detector
+│   ├── memory_manager.py                         # SQLite categorized memory vault & privacy filter
+│   ├── study_manager.py                          # AI Study Mode, MCQs, Viva Voce & Quiz engine
+│   ├── wake_word.py                              # Two-Stage Background Wake-Word Engine ("Hey Jarvis")
 │   └── user_profile.json                         # Permanent user profile data
 ├── frontend/
 │   ├── assets/
