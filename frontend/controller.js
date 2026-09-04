@@ -1,11 +1,21 @@
+// Controller for Eel Exposed Functions & UI Event Bindings
 $(document).ready(function () {
-  // Display Speak Message
+  // -------------------------------------------------------------
+  // Display Speak / Status Message
+  // -------------------------------------------------------------
   eel.expose(DisplayMessage);
   function DisplayMessage(message) {
-    $(".siri-message li:first").text(message);
-    $(".siri-message").textillate("start");
+    if ($(".siri-message li:first").length) {
+      $(".siri-message li:first").text(message);
+      $(".siri-message").textillate("start");
+    } else {
+      $(".siri-message").text(message);
+    }
   }
 
+  // -------------------------------------------------------------
+  // UI State Switchers
+  // -------------------------------------------------------------
   eel.expose(ShowHood);
   function ShowHood() {
     $("#Oval").attr("hidden", false);
@@ -18,61 +28,129 @@ $(document).ready(function () {
     $("#SiriWave").attr("hidden", false);
   }
 
+  // -------------------------------------------------------------
+  // Dynamic Message Appenders
+  // -------------------------------------------------------------
   eel.expose(senderText);
-  function senderText(message) {
-    var chatBox = document.getElementById("chat-canvas-body");
-    if (message.trim() !== "") {
-      chatBox.innerHTML += `<div class="row justify-content-end mb-4">
-          <div class = "width-size">
-          <div class="sender_message">${message}</div>
-      </div>`;
+  function senderText(message, timestamp) {
+    if (!message || message.trim() === "") return;
+    
+    // Hide startup placeholder when messages start appearing
+    $("#Start").attr("hidden", true);
 
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
+    var chatBox = document.getElementById("chat-canvas-body");
+    var timeStr = timestamp || formatCurrentTime();
+    
+    var msgHtml = `
+      <div class="message-row user-row">
+        <div class="message-bubble user-bubble">
+          <div class="message-content">${escapeHtml(message)}</div>
+          <div class="message-meta">${timeStr}</div>
+        </div>
+      </div>
+    `;
+    
+    chatBox.innerHTML += msgHtml;
+    scrollToBottom();
   }
 
   eel.expose(receiverText);
-  function receiverText(message) {
-    var chatBox = document.getElementById("chat-canvas-body");
-    if (message.trim() !== "") {
-      chatBox.innerHTML += `<div class="row justify-content-start mb-4">
-          <div class = "width-size">
-          <div class="receiver_message">${message}</div>
-          </div>
-      </div>`;
+  function receiverText(message, timestamp) {
+    if (!message || message.trim() === "") return;
 
-      // Scroll to the bottom of the chat box
-      chatBox.scrollTop = chatBox.scrollHeight;
+    $("#Start").attr("hidden", true);
+
+    var chatBox = document.getElementById("chat-canvas-body");
+    var timeStr = timestamp || formatCurrentTime();
+
+    var msgHtml = `
+      <div class="message-row assistant-row">
+        <div class="message-bubble assistant-bubble">
+          <div class="message-content">${escapeHtml(message)}</div>
+          <div class="message-meta">
+            <i class="bi bi-robot me-1 text-info"></i> ${timeStr}
+          </div>
+        </div>
+      </div>
+    `;
+
+    chatBox.innerHTML += msgHtml;
+    scrollToBottom();
+  }
+
+  // -------------------------------------------------------------
+  // Real-time Conversation Refresh Hook (called by backend)
+  // -------------------------------------------------------------
+  eel.expose(refreshConversations);
+  function refreshConversations() {
+    if (window.loadConversations) {
+      window.loadConversations();
     }
   }
+
+  // -------------------------------------------------------------
+  // Biometrics & Startup Animations
+  // -------------------------------------------------------------
   eel.expose(hideLoader);
   function hideLoader() {
     $("#Loader").attr("hidden", true);
     $("#FaceAuth").attr("hidden", false);
   }
-  // Hide Face auth and display Face Auth success animation
+
   eel.expose(hideFaceAuth);
   function hideFaceAuth() {
     $("#FaceAuth").attr("hidden", true);
     $("#FaceAuthSuccess").attr("hidden", false);
   }
-  // Hide success and display
+
   eel.expose(hideFaceAuthSuccess);
   function hideFaceAuthSuccess() {
     $("#FaceAuthSuccess").attr("hidden", true);
     $("#HelloGreet").attr("hidden", false);
   }
 
-  // Hide Start Page and display blob
   eel.expose(hideStart);
   function hideStart() {
     $("#Start").attr("hidden", true);
-
     setTimeout(function () {
       $("#Oval").addClass("animate__animated animate__zoomIn");
-    }, 1000);
-    setTimeout(function () {
       $("#Oval").attr("hidden", false);
-    }, 1000);
+    }, 400);
   }
+
+  // -------------------------------------------------------------
+  // Helper Functions
+  // -------------------------------------------------------------
+  function formatCurrentTime() {
+    var d = new Date();
+    var hours = d.getHours();
+    var minutes = d.getMinutes();
+    var ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    minutes = minutes < 10 ? '0' + minutes : minutes;
+    return hours + ':' + minutes + ' ' + ampm;
+  }
+
+  function escapeHtml(text) {
+    var map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+  }
+
+  function scrollToBottom() {
+    var viewport = document.getElementById("chat-viewport");
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  }
+
+  window.scrollToBottom = scrollToBottom;
+  window.escapeHtml = escapeHtml;
+  window.formatCurrentTime = formatCurrentTime;
 });

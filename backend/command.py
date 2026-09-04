@@ -99,6 +99,10 @@ def speak(text):
     try:
         from backend.db import store_message_log
         store_message_log("assistant", text)
+        try:
+            eel.refreshConversations()
+        except Exception:
+            pass
     except Exception:
         pass
 

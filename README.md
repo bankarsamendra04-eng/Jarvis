@@ -49,8 +49,14 @@
 - Automated WhatsApp voice calls, video calls, and instant message delivery linked with an SQLite contacts database.
 - Direct voice-controlled YouTube music and video streaming.
 
-### 🎨 7. Futuristic Cyberpunk UI
+### 🎨 7. Futuristic Cyberpunk UI & Visualizations
 - Built with Python **Eel**, featuring 3D rotating canvas particle globe, Siri audio waveform visualization, and dynamic real-time chat UI.
+
+### 🗂️ 8. Persistent Conversation History Sidebar
+- **Modern Two-Panel Architecture**: Fixed left sidebar on desktop (280–320px) with responsive slide-out drawer on tablets/mobile.
+- **Persistent Multi-Chat History**: Stores conversation threads in SQLite (`conversations` and `messages` tables).
+- **Rich Management**: "+ New Chat" button (`Ctrl+N`), instant search filter, pin/unpin conversations, inline renaming, and safe deletion with confirmation modal.
+- **Auto-Titling**: Automatically generates clean, context-aware titles from the user's first prompt.
 
 ---
 

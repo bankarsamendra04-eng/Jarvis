@@ -19,18 +19,16 @@ def start():
     def init():
         try:
             eel.hideLoader()
-            speak("Welcome to Jarvis")
-            speak("Ready for Face Authentication")
+            speak("Welcome Samendra! Face authentication ke liye camera ki taraf dekhein.")
             flag = recoganize.AuthenticateFace()
             if flag == 1:
-                speak("Face recognized successfully")
+                speak("Face recognize ho gaya hai. Welcome Samendra, main aapki kya madad kar sakta hoon?")
                 eel.hideFaceAuth()
                 eel.hideFaceAuthSuccess()
-                speak("Welcome to Your Assistant")
                 eel.hideStart()
                 play_assistant_sound()
             else:
-                speak("Face not recognized or bypassed. Welcome.")
+                speak("Face match nahi hua. Proceeding with default access. Welcome!")
                 eel.hideFaceAuth()
                 eel.hideFaceAuthSuccess()
                 eel.hideStart()
