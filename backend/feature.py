@@ -508,15 +508,16 @@ def answer_personal_query(query):
     if any(p in q for p in ["about me", "know about me", "tell me about myself", "my profile", "who is samendra", "mere baare mein"]):
         return f"Aap {name} hain, ek {education} jo software development, AI/ML, networking, aur cloud technologies mein specialize kar rahe hain."
 
-    # 8. Check Context-Aware Relevant Memories from SQLite user_memories
-    try:
-        from backend.memory_manager import get_relevant_memories
-        relevant_mems = get_relevant_memories(query, limit=2)
-        if relevant_mems:
-            mem_content = " ".join([m['content'] for m in relevant_mems])
-            return f"Aapke memory records ke anusaar: {mem_content}"
-    except Exception as e:
-        print(f"Memory lookup notice: {e}")
+    # 8. Check Context-Aware Relevant Memories from SQLite ONLY for explicit memory queries
+    if any(p in q for p in ["remember about me", "my memories", "what did i tell you", "what do you remember", "kya yaad hai", "memory mein kya"]):
+        try:
+            from backend.memory_manager import get_relevant_memories
+            relevant_mems = get_relevant_memories(query, limit=2)
+            if relevant_mems:
+                mem_content = " ".join([m['content'] for m in relevant_mems])
+                return f"Aapke memory records ke anusaar: {mem_content}"
+        except Exception as e:
+            print(f"Memory lookup notice: {e}")
 
     return None
 

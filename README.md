@@ -118,7 +118,11 @@
   - *"Explain this function."*
   - *"Fix this error."*
   - *"Run the project."*
-  - *"Prepare this project for GitHub."*
+### 🚀 14. Universal 32-Intent Router & Real Filesystem Action Handler
+- **32-Intent Classification**: Covers `FILE_CREATE`, `FOLDER_CREATE`, `FILE_READ`, `FILE_EDIT`, `FILE_DELETE`, `FOLDER_DELETE`, `PROJECT_CREATE`, `PROJECT_RUN`, `PROJECT_HELP`, `CODING`, `CODE_EXPLANATION`, `CODE_DEBUGGING`, `SELF_INTRODUCTION`, `MCQ_GENERATION`, `QUIZ`, `VIVA`, `EXPLANATION`, `CALCULATION`, `SYSTEM_INFORMATION`, `SYSTEM_COMMAND`, `OPEN_APPLICATION`, `OPEN_FILE`, `MEMORY_SAVE`, `MEMORY_RETRIEVE`, `MEMORY_DELETE`, `GOAL_MANAGEMENT`, `TRANSLATION`, `SUMMARIZATION`, `WEB_SEARCH`, `CONVERSATION`, `GENERAL_QUESTION`, and `UNKNOWN`.
+- **Real Windows Filesystem Operations**: Direct creation and verification of files (`.html`, `.py`, `.cpp`, `.java`, etc.) and directories on Windows Desktop (handling both local and OneDrive paths) with `os.path.exists()` verification.
+- **True Multi-Language Code Generation**: Explicit language detection generating authentic, runnable code in **C++**, **C**, **Java**, **Python**, **JavaScript**, **HTML/CSS**, and **SQL** with compilation/execution commands (eliminating generic Python fallback templates).
+- **Strict Memory Isolation**: Ensures personal memory lookup is exclusively triggered for explicit profile/memory questions (*"What is my name?"*, *"What do you remember about me?"*) and never misroutes filesystem commands or technical queries.
 
 ---
 
@@ -127,6 +131,7 @@
 ```plaintext
 Jarvis/
 ├── backend/
+│   ├── action_handler.py                         # Real Windows filesystem & system action handlers
 │   ├── auth/
 │   │   ├── haarcascade_frontalface_default.xml   # OpenCV face detection model
 │   │   ├── recoganize.py                         # Real-time face authentication
